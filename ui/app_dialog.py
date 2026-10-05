@@ -129,11 +129,21 @@ class AppDialog(QDialog):
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.clicked.connect(self.reject)
 
-        self.save_btn = QPushButton("Save Application")
-        self.save_btn.setDefault(True)
-        self.save_btn.clicked.connect(self._on_save)
-
         btn_layout.addWidget(self.cancel_btn)
+
+        self.save_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);
+                color: #ffffff;
+                font-weight: bold;
+                border: none;
+                border-radius: 6px;
+                padding: 7px 20px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #38bdf8, stop:1 #3b82f6);
+            }
+        """)
         btn_layout.addWidget(self.save_btn)
         main_layout.addLayout(btn_layout)
 

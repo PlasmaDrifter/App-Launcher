@@ -1,17 +1,18 @@
-"""Main window for AutoLaunch.
+"""Modern, fancy desktop interface for AutoLaunch.
 
-Provides an intuitive desktop interface to manage, toggle, reorder,
-and launch configured startup applications with profiles and a countdown timer.
+Features sleek acrylic card layouts, animated toggle switches, badge pills,
+glowing progress indicators, gradient action buttons, and live profile management.
+Complies with zero-emoji guidelines and dynamic path resolution.
 """
 
 from typing import Optional
 
 from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtGui import QFont, QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QListWidget, QListWidgetItem,
-    QProgressBar, QMessageBox, QFrame, QSizePolicy, QApplication
+    QProgressBar, QMessageBox, QFrame, QApplication
 )
 
 from config import AppEntry, ConfigManager
@@ -20,10 +21,11 @@ from ui.app_dialog import AppDialog
 from ui.icon_utils import resolve_icon
 from ui.profile_dialog import ProfileDialog
 from ui.settings_dialog import SettingsDialog
+from ui.widgets import BadgePill, ToggleSwitch
 
 
-class AppRowWidget(QWidget):
-    """Custom widget representing an application in the list."""
+class AppCardWidget(QFrame):
+    """Sleek elevated card representing a configured application."""
 
     def __init__(self, app: AppEntry, parent_window: "MainWindow"):
         super().__init__()
@@ -32,96 +34,173 @@ class AppRowWidget(QWidget):
         self._init_ui()
 
     def _init_ui(self) -> None:
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 6, 8, 6)
-        layout.setSpacing(12)
-
-        # Enabled Checkbox
-        self.checkbox = QPushButton()
-        self.checkbox.setCheckable(True)
-        self.checkbox.setChecked(self.app.enabled)
-        self.checkbox.setFixedSize(24, 24)
-        self.checkbox.setStyleSheet("""
-            QPushButton {
-                border: 2px solid #555;
-                border-radius: 4px;
-                background-color: transparent;
+        self.setObjectName("AppCard")
+        self.setStyleSheet("""
+            QFrame#AppCard {
+                background-color: #131b2e;
+                border: 1px solid #1f2b42;
+                border-radius: 12px;
             }
-            QPushButton:checked {
-                background-color: #3daee9;
-                border-color: #3daee9;
+            QFrame#AppCard:hover {
+                background-color: #17233c;
+                border: 1px solid #38bdf8;
             }
         """)
-        self.checkbox.toggled.connect(self._on_toggled)
-        layout.addWidget(self.checkbox)
 
-        # App Icon
-        self.icon_label = QLabel()
-        self.icon_label.setFixedSize(36, 36)
-        icon = resolve_icon(self.app.icon, self.app.desktop_file)
-        pixmap = icon.pixmap(QSize(36, 36))
-        self.icon_label.setPixmap(pixmap)
-        self.icon_label.setScaledContents(True)
-        layout.addWidget(self.icon_label)
+        card_layout = QHBoxLayout(self)
+        card_layout.setContentsMargins(14, 12, 14, 12)
+        card_layout.setSpacing(14)
 
-        # Name and Command Label
-        text_layout = QVBoxLayout()
-        text_layout.setSpacing(2)
+        # 1. Animated Toggle Switch
+        self.toggle = ToggleSwitch()
+        self.toggle.setChecked(self.app.enabled)
+        self.toggle.toggled.connect(self._on_toggle)
+        self.toggle.setToolTip("Enable or disable this application on startup")
+        card_layout.addWidget(self.toggle)
 
-        name_layout = QHBoxLayout()
-        name_layout.setSpacing(8)
+        # 2. Icon with rounded container
+        icon_box = QFrame()
+        icon_box.setFixedSize(44, 44)
+        icon_box.setStyleSheet("""
+            background-color: #1a233a;
+            border: 1px solid #28354f;
+            border-radius: 10px;
+        """)
+        icon_box_layout = QVBoxLayout(icon_box)
+        icon_box_layout.setContentsMargins(0, 0, 0, 0)
+        icon_box_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.name_label = QLabel(self.app.name)
-        bold_font = QFont()
-        bold_font.setBold(True)
-        bold_font.setPointSize(11)
-        self.name_label.setFont(bold_font)
-        name_layout.addWidget(self.name_label)
+        icon_label = QLabel()
+        icon_label.setFixedSize(32, 32)
+        qicon = resolve_icon(self.app.icon, self.app.desktop_file)
+        icon_label.setPixmap(qicon.pixmap(QSize(32, 32)))
+        icon_label.setScaledContents(True)
+        icon_label.setStyleSheet("background: transparent; border: none;")
+        icon_box_layout.addWidget(icon_label)
 
-        if self.app.delay_seconds > 0:
-            delay_badge = QLabel(f"+{self.app.delay_seconds}s delay")
-            delay_badge.setStyleSheet(
-                "background-color: #3a3f44; color: #8ec07c; "
-                "border-radius: 4px; padding: 2px 6px; font-size: 10px;"
+        card_layout.addWidget(icon_box)
+
+        # 3. App Details (Title, Badges, Subtitle)
+        details_layout = QVBoxLayout()
+        details_layout.setSpacing(4)
+
+        title_row = QHBoxLayout()
+        title_row.setSpacing(8)
+
+        name_label = QLabel(self.app.name)
+        title_font = QFont("Inter, Segoe UI, sans-serif", 11, QFont.Weight.Bold)
+        name_label.setFont(title_font)
+        name_label.setStyleSheet("color: #f8fafc; background: transparent; border: none;")
+        title_row.addWidget(name_label)
+
+        # Category / Profile Badge
+        if "zen" in (self.app.desktop_file or self.app.command).lower():
+            type_badge = BadgePill(
+                "Zen Profile",
+                bg_color="rgba(168, 85, 247, 0.15)",
+                text_color="#c084fc",
+                border_color="rgba(168, 85, 247, 0.35)"
             )
-            name_layout.addWidget(delay_badge)
+            title_row.addWidget(type_badge)
+        elif self.app.desktop_file:
+            type_badge = BadgePill(
+                "Desktop App",
+                bg_color="rgba(56, 189, 248, 0.15)",
+                text_color="#38bdf8",
+                border_color="rgba(56, 189, 248, 0.35)"
+            )
+            title_row.addWidget(type_badge)
+        else:
+            type_badge = BadgePill(
+                "Custom Command",
+                bg_color="rgba(245, 158, 11, 0.15)",
+                text_color="#fbbf24",
+                border_color="rgba(245, 158, 11, 0.35)"
+            )
+            title_row.addWidget(type_badge)
 
-        name_layout.addStretch()
-        text_layout.addLayout(name_layout)
+        # Delay Badge if configured
+        if self.app.delay_seconds > 0:
+            delay_badge = BadgePill(
+                f"+{self.app.delay_seconds}s delay",
+                bg_color="rgba(16, 185, 129, 0.15)",
+                text_color="#34d399",
+                border_color="rgba(16, 185, 129, 0.35)"
+            )
+            title_row.addWidget(delay_badge)
+
+        title_row.addStretch()
+        details_layout.addLayout(title_row)
 
         subtitle_text = self.app.desktop_file or self.app.command
-        self.subtitle_label = QLabel(subtitle_text)
-        self.subtitle_label.setStyleSheet("color: #888; font-size: 11px;")
-        text_layout.addWidget(self.subtitle_label)
+        subtitle_label = QLabel(subtitle_text)
+        subtitle_label.setStyleSheet("color: #94a3b8; font-size: 11px; background: transparent; border: none;")
+        details_layout.addWidget(subtitle_label)
 
-        layout.addLayout(text_layout, stretch=1)
+        card_layout.addLayout(details_layout, stretch=1)
 
-        # Move Up / Down Buttons
+        # 4. Action Buttons (Reorder, Edit, Delete)
+        action_layout = QHBoxLayout()
+        action_layout.setSpacing(6)
+
+        btn_style = """
+            QPushButton {
+                background-color: #1e293b;
+                color: #cbd5e1;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                padding: 4px;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                color: #ffffff;
+                border-color: #38bdf8;
+            }
+        """
+
         self.up_btn = QPushButton("▲")
         self.up_btn.setFixedSize(28, 28)
+        self.up_btn.setStyleSheet(btn_style)
         self.up_btn.setToolTip("Move application up in launch order")
         self.up_btn.clicked.connect(self._on_move_up)
-        layout.addWidget(self.up_btn)
+        action_layout.addWidget(self.up_btn)
 
         self.down_btn = QPushButton("▼")
         self.down_btn.setFixedSize(28, 28)
+        self.down_btn.setStyleSheet(btn_style)
         self.down_btn.setToolTip("Move application down in launch order")
         self.down_btn.clicked.connect(self._on_move_down)
-        layout.addWidget(self.down_btn)
+        action_layout.addWidget(self.down_btn)
 
-        # Edit Button
         self.edit_btn = QPushButton("Edit")
-        self.edit_btn.setFixedSize(54, 28)
+        self.edit_btn.setFixedSize(52, 28)
+        self.edit_btn.setStyleSheet(btn_style)
         self.edit_btn.clicked.connect(self._on_edit)
-        layout.addWidget(self.edit_btn)
+        action_layout.addWidget(self.edit_btn)
 
-        # Delete Button
         self.delete_btn = QPushButton("Remove")
         self.delete_btn.setFixedSize(68, 28)
+        self.delete_btn.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(239, 68, 68, 0.12);
+                color: #f87171;
+                border: 1px solid rgba(239, 68, 68, 0.25);
+                border-radius: 6px;
+                padding: 4px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background-color: rgba(239, 68, 68, 0.25);
+                color: #ffffff;
+                border-color: #ef4444;
+            }
+        """)
         self.delete_btn.clicked.connect(self._on_delete)
-        layout.addWidget(self.delete_btn)
+        action_layout.addWidget(self.delete_btn)
 
-    def _on_toggled(self, checked: bool) -> None:
+        card_layout.addLayout(action_layout)
+
+    def _on_toggle(self, checked: bool) -> None:
         self.app.enabled = checked
         self.parent_window.on_app_toggled(self.app)
 
@@ -139,7 +218,7 @@ class AppRowWidget(QWidget):
 
 
 class MainWindow(QMainWindow):
-    """Main window for AutoLaunch."""
+    """Main window for AutoLaunch with fancy styling and interactive controls."""
 
     def __init__(self, config_manager: ConfigManager, autostart_mode: bool = False):
         super().__init__()
@@ -150,9 +229,9 @@ class MainWindow(QMainWindow):
         self.is_paused = False
 
         self.setWindowTitle("AutoLaunch")
-        self.setMinimumSize(680, 520)
+        self.setMinimumSize(740, 560)
 
-        # Countdown timer (ticks every 1000ms)
+        # Countdown timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._on_timer_tick)
 
@@ -160,102 +239,204 @@ class MainWindow(QMainWindow):
         self._load_profiles_combo()
         self._refresh_app_list()
 
-        # Start countdown if enabled in configuration
         if self.config_manager.enable_countdown and self.config_manager.countdown_seconds > 0:
             self._start_countdown()
         else:
-            self.countdown_container.hide()
+            self.countdown_card.hide()
 
     def _init_ui(self) -> None:
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(16, 16, 16, 16)
-        main_layout.setSpacing(12)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(16)
 
-        # Top Bar: Profile & Global Settings
-        top_bar = QHBoxLayout()
-        top_bar.setSpacing(8)
+        # Top Header Bar
+        header_frame = QFrame()
+        header_frame.setStyleSheet("""
+            QFrame {
+                background-color: #111827;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+                padding: 6px;
+            }
+        """)
+        header_layout = QHBoxLayout(header_frame)
+        header_layout.setContentsMargins(14, 10, 14, 10)
+        header_layout.setSpacing(12)
 
+        # Branding
+        title_box = QVBoxLayout()
+        title_box.setSpacing(2)
+
+        title_lbl = QLabel("AutoLaunch")
+        title_font = QFont("Inter, Segoe UI, sans-serif", 15, QFont.Weight.Bold)
+        title_lbl.setFont(title_font)
+        title_lbl.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
+
+        sub_lbl = QLabel("Startup Application Orchestrator")
+        sub_lbl.setStyleSheet("color: #64748b; font-size: 11px; border: none; background: transparent;")
+
+        title_box.addWidget(title_lbl)
+        title_box.addWidget(sub_lbl)
+        header_layout.addLayout(title_box)
+
+        header_layout.addStretch()
+
+        # Profile Switcher & Actions
         profile_lbl = QLabel("Profile:")
-        bold_font = QFont()
-        bold_font.setBold(True)
-        profile_lbl.setFont(bold_font)
-        top_bar.addWidget(profile_lbl)
+        profile_lbl.setStyleSheet("color: #94a3b8; font-weight: bold; border: none; background: transparent;")
+        header_layout.addWidget(profile_lbl)
 
         self.profile_combo = QComboBox()
-        self.profile_combo.setMinimumWidth(180)
+        self.profile_combo.setMinimumWidth(160)
         self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
-        top_bar.addWidget(self.profile_combo)
+        header_layout.addWidget(self.profile_combo)
 
-        self.new_profile_btn = QPushButton("New")
-        self.new_profile_btn.setToolTip("Create a new profile")
+        btn_header_style = """
+            QPushButton {
+                background-color: #1e293b;
+                color: #e2e8f0;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                border-color: #38bdf8;
+                color: #ffffff;
+            }
+        """
+
+        self.new_profile_btn = QPushButton("+ New")
+        self.new_profile_btn.setStyleSheet(btn_header_style)
+        self.new_profile_btn.setToolTip("Create a new application profile")
         self.new_profile_btn.clicked.connect(self._on_new_profile)
-        top_bar.addWidget(self.new_profile_btn)
+        header_layout.addWidget(self.new_profile_btn)
 
         self.rename_profile_btn = QPushButton("Rename")
-        self.rename_profile_btn.setToolTip("Rename current profile")
+        self.rename_profile_btn.setStyleSheet(btn_header_style)
+        self.rename_profile_btn.setToolTip("Rename active profile")
         self.rename_profile_btn.clicked.connect(self._on_rename_profile)
-        top_bar.addWidget(self.rename_profile_btn)
+        header_layout.addWidget(self.rename_profile_btn)
 
         self.delete_profile_btn = QPushButton("Delete")
-        self.delete_profile_btn.setToolTip("Delete current profile")
+        self.delete_profile_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #f87171;
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background-color: rgba(239, 68, 68, 0.15);
+                border-color: #ef4444;
+            }
+        """)
+        self.delete_profile_btn.setToolTip("Delete active profile")
         self.delete_profile_btn.clicked.connect(self._on_delete_profile)
-        top_bar.addWidget(self.delete_profile_btn)
-
-        top_bar.addStretch()
+        header_layout.addWidget(self.delete_profile_btn)
 
         self.settings_btn = QPushButton("Settings")
+        self.settings_btn.setStyleSheet(btn_header_style)
         self.settings_btn.clicked.connect(self._on_open_settings)
-        top_bar.addWidget(self.settings_btn)
+        header_layout.addWidget(self.settings_btn)
 
-        main_layout.addLayout(top_bar)
+        main_layout.addWidget(header_frame)
 
-        # App List Area
+        # Center: Application Cards List
         self.app_list_widget = QListWidget()
         self.app_list_widget.setSelectionMode(QListWidget.SelectionMode.NoSelection)
+        self.app_list_widget.setSpacing(8)
         self.app_list_widget.setStyleSheet("""
             QListWidget {
-                border: 1px solid #444;
-                border-radius: 6px;
-                background-color: #232629;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+                background-color: #0b1120;
+                padding: 6px;
             }
             QListWidget::item {
-                border-bottom: 1px solid #31363b;
+                border: none;
+                background: transparent;
+                padding: 0px;
             }
         """)
         main_layout.addWidget(self.app_list_widget, stretch=1)
 
-        # Placeholder message when empty
-        self.empty_label = QLabel(
-            "No applications configured in this profile.\n"
-            "Click 'Add Application' below to choose apps to launch on startup."
-        )
-        self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.empty_label.setStyleSheet("color: #888; font-size: 13px; padding: 40px;")
-        main_layout.addWidget(self.empty_label)
-
-        # Countdown Progress Area
-        self.countdown_container = QFrame()
-        self.countdown_container.setStyleSheet("""
+        # Empty State Card
+        self.empty_card = QFrame()
+        self.empty_card.setStyleSheet("""
             QFrame {
-                background-color: #2d3238;
-                border: 1px solid #3daee9;
-                border-radius: 6px;
-                padding: 6px;
+                border: 2px dashed #1e293b;
+                border-radius: 12px;
+                background-color: #0d1424;
+                padding: 30px;
             }
         """)
-        countdown_layout = QVBoxLayout(self.countdown_container)
-        countdown_layout.setContentsMargins(10, 8, 10, 8)
-        countdown_layout.setSpacing(6)
+        empty_layout = QVBoxLayout(self.empty_card)
+        empty_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        empty_layout.setSpacing(12)
+
+        empty_title = QLabel("No applications configured in this profile")
+        empty_title.setFont(QFont("Inter, Segoe UI, sans-serif", 13, QFont.Weight.Bold))
+        empty_title.setStyleSheet("color: #94a3b8; border: none; background: transparent;")
+        empty_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        empty_desc = QLabel(
+            "Add your startup applications, Zen Browser profiles, or custom scripts.\n"
+            "They will automatically launch on desktop boot."
+        )
+        empty_desc.setStyleSheet("color: #64748b; font-size: 12px; border: none; background: transparent;")
+        empty_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        add_first_btn = QPushButton("+ Add First Application")
+        add_first_btn.setFixedSize(200, 36)
+        add_first_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);
+                color: #ffffff;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #38bdf8, stop:1 #3b82f6);
+            }
+        """)
+        add_first_btn.clicked.connect(self._on_add_app)
+
+        empty_layout.addWidget(empty_title)
+        empty_layout.addWidget(empty_desc)
+        empty_layout.addWidget(add_first_btn)
+
+        main_layout.addWidget(self.empty_card)
+
+        # Countdown Progress Card
+        self.countdown_card = QFrame()
+        self.countdown_card.setStyleSheet("""
+            QFrame {
+                background-color: #111827;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+            }
+        """)
+        countdown_layout = QVBoxLayout(self.countdown_card)
+        countdown_layout.setContentsMargins(16, 12, 16, 12)
+        countdown_layout.setSpacing(8)
 
         countdown_header = QHBoxLayout()
         self.countdown_status_label = QLabel("Auto-launching in 5 seconds...")
+        self.countdown_status_label.setFont(QFont("Inter, Segoe UI, sans-serif", 11, QFont.Weight.Medium))
+        self.countdown_status_label.setStyleSheet("color: #38bdf8; border: none; background: transparent;")
         countdown_header.addWidget(self.countdown_status_label)
+
         countdown_header.addStretch()
 
         self.pause_resume_btn = QPushButton("Pause")
-        self.pause_resume_btn.setFixedWidth(70)
+        self.pause_resume_btn.setFixedWidth(74)
         self.pause_resume_btn.clicked.connect(self._toggle_pause_countdown)
         countdown_header.addWidget(self.pause_resume_btn)
 
@@ -274,50 +455,79 @@ class MainWindow(QMainWindow):
             QProgressBar {
                 border: none;
                 border-radius: 4px;
-                background-color: #1b1e20;
+                background-color: #0f172a;
             }
             QProgressBar::chunk {
-                background-color: #3daee9;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #06b6d4, stop:1 #3b82f6);
                 border-radius: 4px;
             }
         """)
         countdown_layout.addWidget(self.progress_bar)
 
-        main_layout.addWidget(self.countdown_container)
+        main_layout.addWidget(self.countdown_card)
 
         # Bottom Action Bar
         bottom_bar = QHBoxLayout()
-        bottom_bar.setSpacing(10)
+        bottom_bar.setSpacing(12)
 
-        self.add_app_btn = QPushButton("Add Application")
-        self.add_app_btn.setFixedHeight(34)
+        self.add_app_btn = QPushButton("+ Add Application")
+        self.add_app_btn.setFixedHeight(38)
+        self.add_app_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #38bdf8;
+                border: 1px solid rgba(56, 189, 248, 0.4);
+                border-radius: 8px;
+                font-weight: bold;
+                padding: 0 18px;
+            }
+            QPushButton:hover {
+                background-color: rgba(56, 189, 248, 0.15);
+                border-color: #38bdf8;
+                color: #ffffff;
+            }
+        """)
         self.add_app_btn.clicked.connect(self._on_add_app)
         bottom_bar.addWidget(self.add_app_btn)
 
         bottom_bar.addStretch()
 
         self.close_btn = QPushButton("Close")
-        self.close_btn.setFixedHeight(34)
+        self.close_btn.setFixedHeight(38)
+        self.close_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #94a3b8;
+                border: 1px solid #334155;
+                border-radius: 8px;
+                padding: 0 16px;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                color: #ffffff;
+            }
+        """)
         self.close_btn.setToolTip("Close AutoLaunch without launching applications")
         self.close_btn.clicked.connect(self.close)
         bottom_bar.addWidget(self.close_btn)
 
         self.launch_now_btn = QPushButton("Launch Selected Now")
-        self.launch_now_btn.setFixedHeight(34)
+        self.launch_now_btn.setFixedHeight(38)
         self.launch_now_btn.setStyleSheet("""
             QPushButton {
-                background-color: #2e7d32;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #10b981, stop:1 #059669);
                 color: #ffffff;
                 font-weight: bold;
-                border: 1px solid #1b5e20;
-                border-radius: 4px;
-                padding: 0 16px;
+                border: none;
+                border-radius: 8px;
+                padding: 0 22px;
+                font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #388e3c;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #34d399, stop:1 #10b981);
             }
             QPushButton:pressed {
-                background-color: #1b5e20;
+                background: #047857;
             }
         """)
         self.launch_now_btn.clicked.connect(self.launch_selected_apps)
@@ -332,7 +542,7 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(self.remaining_seconds)
         self.pause_resume_btn.setText("Pause")
         self._update_countdown_label()
-        self.countdown_container.show()
+        self.countdown_card.show()
         self.timer.start(1000)
 
     def _update_countdown_label(self) -> None:
@@ -366,7 +576,7 @@ class MainWindow(QMainWindow):
 
     def _cancel_countdown(self) -> None:
         self.timer.stop()
-        self.countdown_container.hide()
+        self.countdown_card.hide()
 
     def _pause_for_user_action(self) -> None:
         """Pauses the countdown when the user interacts with the UI."""
@@ -447,16 +657,16 @@ class MainWindow(QMainWindow):
 
         if not profile.apps:
             self.app_list_widget.hide()
-            self.empty_label.show()
+            self.empty_card.show()
         else:
-            self.empty_label.hide()
+            self.empty_card.hide()
             self.app_list_widget.show()
 
             for app in profile.apps:
                 item = QListWidgetItem(self.app_list_widget)
-                item_widget = AppRowWidget(app, self)
-                item.setSizeHint(item_widget.sizeHint())
-                self.app_list_widget.setItemWidget(item, item_widget)
+                card_widget = AppCardWidget(app, self)
+                item.setSizeHint(card_widget.sizeHint())
+                self.app_list_widget.setItemWidget(item, card_widget)
 
     def on_app_toggled(self, app: AppEntry) -> None:
         self.config_manager.save()
@@ -527,6 +737,5 @@ class MainWindow(QMainWindow):
         if enabled_apps:
             AppLauncher.launch_many(enabled_apps)
 
-        # Close the window and cleanly quit AutoLaunch
         self.close()
         QApplication.quit()

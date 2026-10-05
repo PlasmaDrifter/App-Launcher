@@ -16,11 +16,11 @@ from PyQt6.QtWidgets import QAbstractButton, QLabel, QWidget
 class ToggleSwitch(QAbstractButton):
     """Modern iOS/macOS-style animated toggle switch."""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None, width: int = 38, height: int = 20):
         super().__init__(parent)
         self.setCheckable(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFixedSize(44, 24)
+        self.setFixedSize(width, height)
 
         # 0.0 = unchecked (left), 1.0 = checked (right)
         self._thumb_position = 1.0 if self.isChecked() else 0.0

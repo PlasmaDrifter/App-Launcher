@@ -15,8 +15,82 @@ from PyQt6.QtWidgets import (
 )
 
 
+class WindowButton(QPushButton):
+    """Refined window action button with vector-drawn glyphs and animated hover effects."""
+
+    def __init__(self, kind: str, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.kind = kind  # 'minimize' or 'close'
+        self.setFixedSize(26, 26)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._hovered = False
+        self._pressed = False
+
+    def enterEvent(self, event) -> None:
+        self._hovered = True
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event) -> None:
+        self._hovered = False
+        self._pressed = False
+        self.update()
+        super().leaveEvent(event)
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._pressed = True
+            self.update()
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self._pressed = False
+        self.update()
+        super().mouseReleaseEvent(event)
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        from PyQt6.QtGui import QPainter, QPainterPath, QPen, QColor, QRadialGradient
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w = self.width()
+        h = self.height()
+        cx = w / 2.0
+        cy = h / 2.0
+
+        # Hover background & glow
+        if self._hovered:
+            if self.kind == "close":
+                bg_color = QColor("#ef4444") if self._pressed else QColor(239, 68, 68, 210)
+                border_color = QColor(248, 113, 113, 200)
+                glyph_color = QColor("#ffffff")
+            else:
+                bg_color = QColor("#2563eb") if self._pressed else QColor(37, 99, 235, 180)
+                border_color = QColor(96, 165, 250, 180)
+                glyph_color = QColor("#ffffff")
+
+            painter.setBrush(bg_color)
+            painter.setPen(QPen(border_color, 1.0))
+            painter.drawRoundedRect(1, 1, w - 2, h - 2, 6, 6)
+        else:
+            glyph_color = QColor("#7d8fa6")
+
+        # Crisp vector glyphs
+        pen = QPen(glyph_color, 1.6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+
+        if self.kind == "close":
+            arm = 4.2
+            painter.drawLine(int(cx - arm), int(cy - arm), int(cx + arm), int(cy + arm))
+            painter.drawLine(int(cx - arm), int(cy + arm), int(cx + arm), int(cy - arm))
+        elif self.kind == "minimize":
+            arm = 4.5
+            painter.drawLine(int(cx - arm), int(cy + 1), int(cx + arm), int(cy + 1))
+
+
 class WindowControls(QFrame):
-    """Custom minimize and close window buttons inside a persistent container box."""
+    """Custom minimize and close window controls pill with polished glassmorphism aesthetics."""
 
     def __init__(self, parent_window: QWidget, show_minimize: bool = True):
         super().__init__()
@@ -24,58 +98,29 @@ class WindowControls(QFrame):
         self.setObjectName("WindowControlsBox")
         self.setStyleSheet("""
             QFrame#WindowControlsBox {
-                background-color: #172133;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1a2333, stop:1 #111827);
                 border: 1px solid #28374f;
-                border-radius: 7px;
+                border-radius: 8px;
             }
         """)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(4, 2, 4, 2)
+        layout.setContentsMargins(3, 3, 3, 3)
         layout.setSpacing(3)
 
-        btn_base_style = """
-            QPushButton {
-                background-color: transparent;
-                color: #94a3b8;
-                border: none;
-                border-radius: 4px;
-                font-family: monospace;
-                font-size: 13px;
-                font-weight: bold;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: #26354d;
-                color: #ffffff;
-            }
-        """
-
         if show_minimize:
-            self.min_btn = QPushButton("-")
-            self.min_btn.setFixedSize(24, 24)
-            self.min_btn.setStyleSheet(btn_base_style)
+            self.min_btn = WindowButton("minimize")
             self.min_btn.setToolTip("Minimize")
             self.min_btn.clicked.connect(self.parent_window.showMinimized)
             layout.addWidget(self.min_btn)
 
-        self.close_btn = QPushButton("x")
-        self.close_btn.setFixedSize(24, 24)
-        self.close_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #94a3b8;
-                border: none;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: bold;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: #ef4444;
-                color: #ffffff;
-            }
-        """)
+            # Elegant micro-divider between minimize and close
+            sep = QFrame()
+            sep.setFixedSize(1, 14)
+            sep.setStyleSheet("background-color: #243247; border: none;")
+            layout.addWidget(sep)
+
+        self.close_btn = WindowButton("close")
         self.close_btn.setToolTip("Close")
         self.close_btn.clicked.connect(self.parent_window.close)
         layout.addWidget(self.close_btn)

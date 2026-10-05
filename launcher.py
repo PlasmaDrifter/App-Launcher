@@ -84,12 +84,55 @@ class AppLauncher:
         except Exception:
             return False
 
+    @staticmethod
+    def get_current_activity() -> str:
+        """Returns the current active KDE Plasma activity UUID if available."""
+        try:
+            res = subprocess.run(
+                ["qdbus-qt6", "org.kde.ActivityManager", "/ActivityManager/Activities", "CurrentActivity"],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            if res.returncode == 0:
+                return res.stdout.strip()
+        except Exception:
+            pass
+        return ""
+
+    @staticmethod
+    def restore_activity_deferred(activity_id: str, delay_seconds: float = 1.2) -> None:
+        """Ensures the desktop view stays on the starting activity after apps on secondary activities spawn."""
+        if not activity_id:
+            return
+        cmd = (
+            f"sleep {delay_seconds} && "
+            f"qdbus-qt6 org.kde.ActivityManager /ActivityManager/Activities SetCurrentActivity '{activity_id}'"
+        )
+        try:
+            subprocess.Popen(
+                ["/bin/sh", "-c", cmd],
+                start_new_session=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+            )
+        except Exception:
+            pass
+
     @classmethod
     def launch_many(cls, apps: List[AppEntry]) -> int:
         """Launches all enabled applications in the list. Returns count launched."""
+        initial_activity = cls.get_current_activity()
         launched_count = 0
         for app in apps:
             if app.enabled:
                 if cls.launch(app):
                     launched_count += 1
+
+        if initial_activity:
+            cls.restore_activity_deferred(initial_activity)
+
         return launched_count
+

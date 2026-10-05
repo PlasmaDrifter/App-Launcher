@@ -31,7 +31,7 @@ class AutostartManager:
                 content = cls.generate_desktop_content(autostart=True)
                 with open(autostart_file, "w", encoding="utf-8") as f:
                     f.write(content)
-                autostart_file.chmod(0o755)
+                autostart_file.chmod(0o644)
                 return True
             except Exception:
                 return False
@@ -52,7 +52,7 @@ class AutostartManager:
             content = cls.generate_desktop_content(autostart=False)
             with open(app_file, "w", encoding="utf-8") as f:
                 f.write(content)
-            app_file.chmod(0o755)
+            app_file.chmod(0o644)
             return True
         except Exception:
             return False
@@ -61,7 +61,7 @@ class AutostartManager:
     def generate_desktop_content(autostart: bool = False) -> str:
         """Generates desktop file content without any hardcoded usernames."""
         flag = " --autostart" if autostart else ""
-        exec_line = f'Exec=sh -c \'python3 "$HOME/Source/AutoLaunch/autolaunch.py"{flag}\''
+        exec_line = f"Exec=autolaunch{flag}"
         icon_path = 'Icon=autolaunch'
 
         return f"""[Desktop Entry]

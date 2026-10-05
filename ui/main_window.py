@@ -666,10 +666,19 @@ class MainWindow(QMainWindow):
         self._pause_for_user_action()
         dialog = SettingsDialog(self.config_manager, self)
         if dialog.exec():
-            if self.config_manager.enable_countdown and self.config_manager.countdown_seconds > 0:
-                self._start_countdown()
-            else:
+            # If user checked/configured settings, don't suddenly start a race countdown.
+            # Instead cancel active timer so user can review window, or reset countdown in paused state.
+            if not self.config_manager.enable_countdown or self.config_manager.countdown_seconds <= 0:
                 self._cancel_countdown()
+            else:
+                self.remaining_seconds = self.config_manager.countdown_seconds
+                self.progress_bar.setRange(0, max(1, self.config_manager.countdown_seconds))
+                self.progress_bar.setValue(self.remaining_seconds)
+                self.is_paused = True
+                self.timer.stop()
+                self.pause_resume_btn.setText("Resume")
+                self.countdown_status_label.setText(f"Timer reset to {self.remaining_seconds}s (Paused)")
+                self.countdown_card.show()
 
     def _refresh_app_list(self) -> None:
         self.app_list_widget.clear()

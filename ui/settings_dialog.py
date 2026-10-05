@@ -31,30 +31,56 @@ class SettingsDialog(FramelessDialogBase):
         main_layout.setSpacing(16)
 
         # Countdown Group
-        countdown_group = QGroupBox("Countdown & Auto-Launch")
-        countdown_form = QFormLayout(countdown_group)
+        countdown_group = QGroupBox("Countdown & Auto-Launch Timer")
+        countdown_vbox = QVBoxLayout(countdown_group)
+        countdown_vbox.setSpacing(10)
 
-        self.enable_countdown_check = QCheckBox("Enable auto-launch countdown")
+        self.enable_countdown_check = QCheckBox("Automatically launch apps after countdown timer")
         self.enable_countdown_check.setChecked(self.config_manager.enable_countdown)
         self.enable_countdown_check.toggled.connect(self._on_countdown_toggled)
+        countdown_vbox.addWidget(self.enable_countdown_check)
+
+        countdown_desc = QLabel(
+            "When enabled, opening AutoLaunch starts a countdown bar. When it reaches 0s, "
+            "it launches your apps and exits. If unchecked, the app waits on screen until you "
+            "manually click 'Launch All Apps Now'."
+        )
+        countdown_desc.setWordWrap(True)
+        countdown_desc.setStyleSheet("color: #64748b; font-size: 11px; margin-left: 20px;")
+        countdown_vbox.addWidget(countdown_desc)
+
+        duration_layout = QHBoxLayout()
+        duration_layout.setContentsMargins(20, 0, 0, 0)
+        duration_lbl = QLabel("Timer duration:")
+        duration_lbl.setStyleSheet("color: #94a3b8; font-size: 12px;")
+        duration_layout.addWidget(duration_lbl)
 
         self.countdown_spin = QSpinBox()
         self.countdown_spin.setRange(1, 120)
         self.countdown_spin.setValue(self.config_manager.countdown_seconds)
         self.countdown_spin.setSuffix(" seconds")
         self.countdown_spin.setEnabled(self.config_manager.enable_countdown)
+        duration_layout.addWidget(self.countdown_spin)
+        duration_layout.addStretch()
+        countdown_vbox.addLayout(duration_layout)
 
-        countdown_form.addRow(self.enable_countdown_check)
-        countdown_form.addRow("Countdown duration:", self.countdown_spin)
         main_layout.addWidget(countdown_group)
 
         # Autostart Group
         autostart_group = QGroupBox("Desktop Startup Integration")
         autostart_layout = QVBoxLayout(autostart_group)
+        autostart_layout.setSpacing(10)
 
-        self.autostart_check = QCheckBox("Launch AutoLaunch automatically when logging into desktop")
+        self.autostart_check = QCheckBox("Start AutoLaunch on system boot / login")
         self.autostart_check.setChecked(AutostartManager.is_autostart_enabled())
         autostart_layout.addWidget(self.autostart_check)
+
+        autostart_desc = QLabel(
+            "Places autolaunch in your desktop autostart so this window appears on login."
+        )
+        autostart_desc.setWordWrap(True)
+        autostart_desc.setStyleSheet("color: #64748b; font-size: 11px; margin-left: 20px;")
+        autostart_layout.addWidget(autostart_desc)
 
         install_menu_btn = QPushButton("Register AutoLaunch in Application Menu")
         install_menu_btn.clicked.connect(self._install_desktop_entry)

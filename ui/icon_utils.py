@@ -16,14 +16,16 @@ def resolve_icon(icon_name: Optional[str], icon_path: Optional[str] = None) -> Q
     Returns a valid QIcon or a fallback system icon.
     """
     # 1. Direct path provided
-    if icon_path and Path(icon_path).is_file():
-        icon = QIcon(icon_path)
-        if not icon.isNull():
-            return icon
+    if icon_path:
+        p_obj = Path(icon_path).expanduser()
+        if p_obj.is_file():
+            icon = QIcon(str(p_obj))
+            if not icon.isNull():
+                return icon
 
     # 2. Check if icon_name itself is an existing file
     if icon_name:
-        candidate_path = Path(icon_name)
+        candidate_path = Path(icon_name).expanduser()
         if candidate_path.is_file():
             icon = QIcon(str(candidate_path))
             if not icon.isNull():

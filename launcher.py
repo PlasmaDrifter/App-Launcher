@@ -31,7 +31,7 @@ class AppLauncher:
         """
         # Check if desktop file is configured and exists
         desktop_target = app.desktop_file.strip()
-        desktop_path: Path = Path(desktop_target)
+        desktop_path: Path = Path(desktop_target).expanduser() if desktop_target else Path()
         desktop_id = desktop_path.name if desktop_target else ""
 
         # Check if gtk-launch or gio is available
@@ -42,14 +42,14 @@ class AppLauncher:
 
         if desktop_id and has_gtk_launch:
             cmd_str = f'gtk-launch "{desktop_id}"'
-        elif desktop_target and Path(desktop_target).is_file() and has_gio:
-            cmd_str = f'gio launch "{desktop_target}"'
+        elif desktop_path.is_file() and has_gio:
+            cmd_str = f'gio launch "{desktop_path}"'
         elif app.command.strip():
             cmd_str = app.command.strip()
-        elif desktop_target and Path(desktop_target).is_file():
+        elif desktop_path.is_file():
             # Fallback to parsing exec line from desktop file
             from desktop_scanner import DesktopScanner
-            parsed = DesktopScanner.parse_desktop_file(Path(desktop_target))
+            parsed = DesktopScanner.parse_desktop_file(desktop_path)
             if parsed and parsed.clean_command:
                 cmd_str = parsed.clean_command
 

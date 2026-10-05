@@ -37,7 +37,23 @@ class AppEntry:
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        home = str(Path.home())
+        def _collapse(s: str) -> str:
+            if not s:
+                return ""
+            if s.startswith(home):
+                return "~" + s[len(home):]
+            return s.replace(home, "$HOME")
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "command": _collapse(self.command),
+            "desktop_file": _collapse(self.desktop_file),
+            "icon": _collapse(self.icon),
+            "enabled": self.enabled,
+            "delay_seconds": self.delay_seconds,
+        }
 
 
 @dataclass

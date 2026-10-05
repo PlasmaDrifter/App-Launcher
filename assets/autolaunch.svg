@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Background squircle gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141c2e"/>
+      <stop offset="50%" stop-color="#0b0f19"/>
+      <stop offset="100%" stop-color="#05070c"/>
+    </linearGradient>
+
+    <!-- Outer rim metallic border gradient -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="40%" stop-color="#1e293b"/>
+      <stop offset="80%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+
+    <!-- Rocket body gradient -->
+    <linearGradient id="rocketBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#e2e8f0"/>
+      <stop offset="70%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+
+    <!-- Cyan/Sky primary glow -->
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <!-- Rocket thruster flame gradient -->
+    <linearGradient id="flameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="30%" stop-color="#6366f1"/>
+      <stop offset="70%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <!-- Subtle drop shadow filter -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Base Squircle Container -->
+  <rect x="14" y="14" width="228" height="228" rx="52" ry="52" fill="url(#bgGrad)"/>
+  <rect x="14" y="14" width="228" height="228" rx="52" ry="52" fill="none" stroke="url(#rimGrad)" stroke-width="3" stroke-opacity="0.8"/>
+
+  <!-- Background Orbit / Speed Rings -->
+  <circle cx="128" cy="128" r="76" fill="none" stroke="#1e293b" stroke-width="2" stroke-dasharray="6,8"/>
+  <circle cx="128" cy="128" r="92" fill="none" stroke="#172554" stroke-width="1.5" stroke-dasharray="4,12"/>
+
+  <!-- Thruster Flame / Plume -->
+  <path d="M 112 144 C 98 170 80 192 64 206 C 80 192 104 174 128 160 Z" fill="url(#flameGrad)" opacity="0.9" filter="url(#softGlow)"/>
+  <path d="M 116 148 C 104 168 90 184 76 196 C 88 184 108 170 124 156 Z" fill="#ffffff" opacity="0.85"/>
+
+  <!-- Left Fin -->
+  <path d="M 106 128 L 78 152 C 74 156 72 162 74 167 L 78 174 L 102 160 L 118 144 Z" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- Right Fin -->
+  <path d="M 146 88 L 170 60 C 174 56 180 54 185 56 L 192 60 L 178 84 L 162 100 Z" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- Central Speed Rocket Fuselage -->
+  <path d="M 174 82 C 182 74 186 64 188 56 C 180 58 170 62 162 70 L 122 110 C 114 118 108 128 106 138 L 136 168 C 146 166 156 160 164 152 Z" fill="url(#rocketBody)" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Center Cabin / Port Window -->
+  <circle cx="148" cy="108" r="11" fill="#0b0f19" stroke="#38bdf8" stroke-width="2"/>
+  <circle cx="148" cy="108" r="7" fill="url(#cyanGlow)"/>
+  <circle cx="146" cy="106" r="2.5" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Fast Launch Sparkles / App Launch Nodes -->
+  <circle cx="188" cy="56" r="3.5" fill="#38bdf8" filter="url(#softGlow)"/>
+  <line x1="188" y1="46" x2="188" y2="66" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="178" y1="56" x2="198" y2="56" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+
+  <circle cx="68" cy="88" r="3" fill="#38bdf8" opacity="0.6"/>
+  <circle cx="204" cy="154" r="2.5" fill="#6366f1" opacity="0.6"/>
+  <circle cx="178" cy="198" r="3" fill="#38bdf8" opacity="0.5"/>
+</svg>

@@ -62,7 +62,7 @@ class AutostartManager:
         """Generates desktop file content without any hardcoded usernames."""
         flag = " --autostart" if autostart else ""
         exec_line = f'Exec=sh -c \'python3 "$HOME/Source/AutoLaunch/autolaunch.py"{flag}\''
-        icon_path = 'Icon=system-run'
+        icon_path = 'Icon=autolaunch'
 
         return f"""[Desktop Entry]
 Type=Application

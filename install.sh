@@ -25,7 +25,7 @@ Name=AutoLaunch
 GenericName=Startup Application Launcher
 Comment=Configure and launch startup applications on desktop boot
 Exec=sh -c 'python3 "\$HOME/Source/AutoLaunch/autolaunch.py"'
-Icon=system-run
+Icon=autolaunch
 Terminal=false
 StartupNotify=true
 Categories=LocalTools;
@@ -43,7 +43,7 @@ Name=AutoLaunch
 GenericName=Startup Application Launcher
 Comment=Configure and launch startup applications on desktop boot
 Exec=sh -c 'python3 "\$HOME/Source/AutoLaunch/autolaunch.py" --autostart'
-Icon=system-run
+Icon=autolaunch
 Terminal=false
 StartupNotify=true
 Categories=LocalTools;
@@ -53,7 +53,18 @@ X-KDE-Wayland-AppId=autolaunch
 EOF
 chmod 644 "${AUTOSTART_DIR}/autolaunch.desktop"
 
+# 4. Install icons into user icon theme
+ICON_SCALABLE_DIR="${HOME}/.local/share/icons/hicolor/scalable/apps"
+mkdir -p "${ICON_SCALABLE_DIR}"
+if [ -f "${SCRIPT_DIR}/assets/autolaunch.svg" ]; then
+    cp "${SCRIPT_DIR}/assets/autolaunch.svg" "${ICON_SCALABLE_DIR}/autolaunch.svg"
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t "${HOME}/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+fi
+
 echo "AutoLaunch installed successfully."
 echo "Binary link: ${BIN_DIR}/autolaunch"
 echo "Menu entry: ${APP_DIR}/autolaunch.desktop"
 echo "Autostart:  ${AUTOSTART_DIR}/autolaunch.desktop"
+echo "Icon:       ${ICON_SCALABLE_DIR}/autolaunch.svg"

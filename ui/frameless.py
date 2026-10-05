@@ -112,36 +112,22 @@ class FramelessDialogBase(QDialog):
     def __init__(self, parent: Optional[QWidget] = None, title: str = ""):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setStyleSheet("background-color: #0d121f;")
 
-        # Outer layout with padding for drop shadow
-        outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(10, 10, 10, 10)
-
-        # Elevated body frame
-        self.body_frame = QFrame()
-        self.body_frame.setStyleSheet("""
-            QFrame {
-                background-color: #0d121f;
-                border: 1px solid #1e293b;
-                border-radius: 14px;
-            }
-        """)
-
-        # Drop shadow
-        shadow = QGraphicsDropShadowEffect(self.body_frame)
-        shadow.setBlurRadius(24)
-        shadow.setColor(QColor(0, 0, 0, 180))
-        shadow.setOffset(0, 6)
-        self.body_frame.setGraphicsEffect(shadow)
-
-        self.content_layout = QVBoxLayout(self.body_frame)
+        self.content_layout = QVBoxLayout(self)
         self.content_layout.setContentsMargins(16, 12, 16, 16)
         self.content_layout.setSpacing(12)
 
         # Header bar
         self.dialog_header = DraggableHeader()
-        self.dialog_header.setStyleSheet("background: transparent; border: none;")
+        self.dialog_header.setStyleSheet("""
+            QFrame {
+                background-color: #111827;
+                border: 1px solid #1e293b;
+                border-radius: 10px;
+                padding: 4px;
+            }
+        """)
         header_layout = QHBoxLayout(self.dialog_header)
         header_layout.setContentsMargins(4, 2, 4, 4)
 
@@ -157,4 +143,3 @@ class FramelessDialogBase(QDialog):
         header_layout.addWidget(self.controls)
 
         self.content_layout.addWidget(self.dialog_header)
-        outer_layout.addWidget(self.body_frame)

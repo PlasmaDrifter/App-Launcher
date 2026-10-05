@@ -229,9 +229,8 @@ class MainWindow(QMainWindow):
         self.is_paused = False
 
         self.setWindowTitle("AutoLaunch")
-        self.setMinimumSize(760, 580)
+        self.setMinimumSize(760, 560)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         # Countdown timer
         self.timer = QTimer(self)
@@ -248,33 +247,17 @@ class MainWindow(QMainWindow):
 
     def _init_ui(self) -> None:
         central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        outer_layout = QVBoxLayout(central_widget)
-        outer_layout.setContentsMargins(12, 12, 12, 12)
-
-        # Master Frame with rounded acrylic border and drop shadow
-        from PyQt6.QtWidgets import QGraphicsDropShadowEffect
-        from PyQt6.QtGui import QColor
-
-        self.master_frame = QFrame()
-        self.master_frame.setObjectName("MasterFrame")
-        self.master_frame.setStyleSheet("""
-            QFrame#MasterFrame {
+        central_widget.setObjectName("CentralWidget")
+        central_widget.setStyleSheet("""
+            QWidget#CentralWidget {
                 background-color: #0b0f19;
-                border: 1px solid #1e293b;
-                border-radius: 16px;
             }
         """)
-        shadow = QGraphicsDropShadowEffect(self.master_frame)
-        shadow.setBlurRadius(28)
-        shadow.setColor(QColor(0, 0, 0, 200))
-        shadow.setOffset(0, 8)
-        self.master_frame.setGraphicsEffect(shadow)
+        self.setCentralWidget(central_widget)
 
-        main_layout = QVBoxLayout(self.master_frame)
-        main_layout.setContentsMargins(18, 14, 18, 16)
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(18, 14, 18, 18)
         main_layout.setSpacing(14)
-        outer_layout.addWidget(self.master_frame)
 
         # Top Header Bar (Draggable)
         from ui.frameless import DraggableHeader, WindowControls
@@ -406,9 +389,9 @@ class MainWindow(QMainWindow):
         self.empty_card = QFrame()
         self.empty_card.setStyleSheet("""
             QFrame {
-                border: 2px dashed #1e293b;
+                border: 1px solid #1e293b;
                 border-radius: 12px;
-                background-color: #0d1424;
+                background-color: #0f172a;
                 padding: 30px;
             }
         """)

@@ -215,9 +215,9 @@ class MainWindow(QMainWindow):
         self.is_paused = False
 
         self.setWindowTitle("AutoLaunch")
-        # Portrait orientation: taller and narrower
-        self.setMinimumSize(420, 680)
-        self.resize(460, 760)
+        # Wider portrait orientation to accommodate labels comfortably
+        self.setMinimumSize(480, 700)
+        self.resize(520, 780)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
         # Countdown timer
@@ -288,7 +288,7 @@ class MainWindow(QMainWindow):
 
         # Row 2: Profile Selector & Quick Actions
         row2 = QHBoxLayout()
-        row2.setSpacing(5)
+        row2.setSpacing(6)
 
         prof_lbl = QLabel("Profile:")
         prof_lbl.setStyleSheet("color: #94a3b8; font-size: 11px; font-weight: bold; border: none; background: transparent;")
@@ -307,7 +307,7 @@ class MainWindow(QMainWindow):
                 border-radius: 5px;
                 font-size: 11px;
                 font-weight: 500;
-                padding: 4px 8px;
+                padding: 4px 10px;
             }
             QPushButton:hover {
                 background-color: #334155;
@@ -316,22 +316,22 @@ class MainWindow(QMainWindow):
             }
         """
 
-        self.new_profile_btn = QPushButton("+")
-        self.new_profile_btn.setFixedSize(26, 26)
+        self.new_profile_btn = QPushButton("+ New")
+        self.new_profile_btn.setFixedHeight(28)
         self.new_profile_btn.setStyleSheet(btn_header_style)
         self.new_profile_btn.setToolTip("Create a new profile")
         self.new_profile_btn.clicked.connect(self._on_new_profile)
         row2.addWidget(self.new_profile_btn)
 
-        self.rename_profile_btn = QPushButton("Ren")
-        self.rename_profile_btn.setFixedSize(34, 26)
+        self.rename_profile_btn = QPushButton("Rename")
+        self.rename_profile_btn.setFixedHeight(28)
         self.rename_profile_btn.setStyleSheet(btn_header_style)
         self.rename_profile_btn.setToolTip("Rename active profile")
         self.rename_profile_btn.clicked.connect(self._on_rename_profile)
         row2.addWidget(self.rename_profile_btn)
 
-        self.delete_profile_btn = QPushButton("Del")
-        self.delete_profile_btn.setFixedSize(34, 26)
+        self.delete_profile_btn = QPushButton("Delete")
+        self.delete_profile_btn.setFixedHeight(28)
         self.delete_profile_btn.setStyleSheet("""
             QPushButton {
                 background-color: transparent;
@@ -340,7 +340,7 @@ class MainWindow(QMainWindow):
                 border-radius: 5px;
                 font-size: 11px;
                 font-weight: 500;
-                padding: 4px 6px;
+                padding: 4px 10px;
             }
             QPushButton:hover {
                 background-color: rgba(239, 68, 68, 0.15);
@@ -353,7 +353,7 @@ class MainWindow(QMainWindow):
 
         self.settings_btn = QPushButton("Settings")
         self.settings_btn.setStyleSheet(btn_header_style)
-        self.settings_btn.setFixedHeight(26)
+        self.settings_btn.setFixedHeight(28)
         self.settings_btn.clicked.connect(self._on_open_settings)
         row2.addWidget(self.settings_btn)
 

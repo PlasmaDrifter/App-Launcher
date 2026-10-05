@@ -15,50 +15,58 @@ from PyQt6.QtWidgets import (
 )
 
 
-class WindowControls(QWidget):
-    """Custom minimize and close window buttons for frameless windows."""
+class WindowControls(QFrame):
+    """Custom minimize and close window buttons inside a persistent container box."""
 
     def __init__(self, parent_window: QWidget, show_minimize: bool = True):
         super().__init__()
         self.parent_window = parent_window
+        self.setObjectName("WindowControlsBox")
+        self.setStyleSheet("""
+            QFrame#WindowControlsBox {
+                background-color: #172133;
+                border: 1px solid #28374f;
+                border-radius: 7px;
+            }
+        """)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setContentsMargins(4, 2, 4, 2)
+        layout.setSpacing(3)
 
         btn_base_style = """
             QPushButton {
                 background-color: transparent;
                 color: #94a3b8;
-                border: 1px solid transparent;
-                border-radius: 6px;
+                border: none;
+                border-radius: 4px;
                 font-family: monospace;
                 font-size: 13px;
                 font-weight: bold;
                 padding: 0px;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #26354d;
                 color: #ffffff;
             }
         """
 
         if show_minimize:
             self.min_btn = QPushButton("-")
-            self.min_btn.setFixedSize(28, 28)
+            self.min_btn.setFixedSize(24, 24)
             self.min_btn.setStyleSheet(btn_base_style)
             self.min_btn.setToolTip("Minimize")
             self.min_btn.clicked.connect(self.parent_window.showMinimized)
             layout.addWidget(self.min_btn)
 
         self.close_btn = QPushButton("x")
-        self.close_btn.setFixedSize(28, 28)
+        self.close_btn.setFixedSize(24, 24)
         self.close_btn.setStyleSheet("""
             QPushButton {
                 background-color: transparent;
                 color: #94a3b8;
-                border: 1px solid transparent;
-                border-radius: 6px;
+                border: none;
+                border-radius: 4px;
                 font-size: 12px;
                 font-weight: bold;
                 padding: 0px;

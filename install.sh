@@ -28,7 +28,7 @@ Exec=sh -c 'python3 "\$HOME/Source/AutoLaunch/autolaunch.py"'
 Icon=system-run
 Terminal=false
 StartupNotify=true
-Categories=Utility;System;
+Categories=LocalTools;
 StartupWMClass=autolaunch
 X-KDE-Wayland-AppId=autolaunch
 EOF
@@ -46,7 +46,7 @@ Exec=sh -c 'python3 "\$HOME/Source/AutoLaunch/autolaunch.py" --autostart'
 Icon=system-run
 Terminal=false
 StartupNotify=true
-Categories=Utility;System;
+Categories=LocalTools;
 X-GNOME-Autostart-enabled=true
 StartupWMClass=autolaunch
 X-KDE-Wayland-AppId=autolaunch

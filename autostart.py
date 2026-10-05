@@ -74,7 +74,7 @@ Comment=Configure and launch startup applications on desktop boot
 {icon_path}
 Terminal=false
 StartupNotify=true
-Categories=Utility;System;
+Categories=LocalTools;
 X-GNOME-Autostart-enabled=true
 StartupWMClass=autolaunch
 X-KDE-Wayland-AppId=autolaunch

@@ -229,7 +229,9 @@ class MainWindow(QMainWindow):
         self.is_paused = False
 
         self.setWindowTitle("AutoLaunch")
-        self.setMinimumSize(740, 560)
+        self.setMinimumSize(760, 580)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         # Countdown timer
         self.timer = QTimer(self)
@@ -247,18 +249,42 @@ class MainWindow(QMainWindow):
     def _init_ui(self) -> None:
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(16)
+        outer_layout = QVBoxLayout(central_widget)
+        outer_layout.setContentsMargins(12, 12, 12, 12)
 
-        # Top Header Bar
-        header_frame = QFrame()
+        # Master Frame with rounded acrylic border and drop shadow
+        from PyQt6.QtWidgets import QGraphicsDropShadowEffect
+        from PyQt6.QtGui import QColor
+
+        self.master_frame = QFrame()
+        self.master_frame.setObjectName("MasterFrame")
+        self.master_frame.setStyleSheet("""
+            QFrame#MasterFrame {
+                background-color: #0b0f19;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+            }
+        """)
+        shadow = QGraphicsDropShadowEffect(self.master_frame)
+        shadow.setBlurRadius(28)
+        shadow.setColor(QColor(0, 0, 0, 200))
+        shadow.setOffset(0, 8)
+        self.master_frame.setGraphicsEffect(shadow)
+
+        main_layout = QVBoxLayout(self.master_frame)
+        main_layout.setContentsMargins(18, 14, 18, 16)
+        main_layout.setSpacing(14)
+        outer_layout.addWidget(self.master_frame)
+
+        # Top Header Bar (Draggable)
+        from ui.frameless import DraggableHeader, WindowControls
+        header_frame = DraggableHeader()
         header_frame.setStyleSheet("""
             QFrame {
                 background-color: #111827;
                 border: 1px solid #1e293b;
                 border-radius: 12px;
-                padding: 6px;
+                padding: 4px;
             }
         """)
         header_layout = QHBoxLayout(header_frame)
@@ -344,6 +370,16 @@ class MainWindow(QMainWindow):
         self.settings_btn.setStyleSheet(btn_header_style)
         self.settings_btn.clicked.connect(self._on_open_settings)
         header_layout.addWidget(self.settings_btn)
+
+        # Subtle separator
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.VLine)
+        sep.setStyleSheet("color: #1e293b; max-height: 20px;")
+        header_layout.addWidget(sep)
+
+        # Window Controls (Minimize, Close)
+        self.window_controls = WindowControls(self, show_minimize=True)
+        header_layout.addWidget(self.window_controls)
 
         main_layout.addWidget(header_frame)
 

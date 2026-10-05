@@ -13,21 +13,21 @@ from PyQt6.QtWidgets import (
 
 from autostart import AutostartManager
 from config import ConfigManager
+from ui.frameless import FramelessDialogBase
 
 
-class SettingsDialog(QDialog):
+class SettingsDialog(FramelessDialogBase):
     """Dialog for editing global AutoLaunch settings."""
 
     def __init__(self, config_manager: ConfigManager, parent: Optional[QWidget] = None):
-        super().__init__(parent)
+        super().__init__(parent, title="AutoLaunch Settings")
         self.config_manager = config_manager
-        self.setWindowTitle("AutoLaunch Settings")
-        self.setMinimumWidth(420)
+        self.setMinimumWidth(440)
 
         self._init_ui()
 
     def _init_ui(self) -> None:
-        main_layout = QVBoxLayout(self)
+        main_layout = self.content_layout
         main_layout.setSpacing(16)
 
         # Countdown Group
@@ -71,6 +71,9 @@ class SettingsDialog(QDialog):
 
         btn_layout.addWidget(cancel_btn)
 
+        save_btn = QPushButton("Save Settings")
+        save_btn.setDefault(True)
+        save_btn.clicked.connect(self._on_save)
         save_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);

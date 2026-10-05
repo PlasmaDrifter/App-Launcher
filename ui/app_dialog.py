@@ -17,21 +17,21 @@ from PyQt6.QtGui import QIcon
 
 from config import AppEntry
 from desktop_scanner import DesktopAppInfo, DesktopScanner
+from ui.frameless import FramelessDialogBase
 from ui.icon_utils import resolve_icon
 
 
-class AppDialog(QDialog):
+class AppDialog(FramelessDialogBase):
     """Dialog to create or edit an AppEntry."""
 
     def __init__(self, parent: Optional[QWidget] = None, app_entry: Optional[AppEntry] = None):
-        super().__init__(parent)
+        title = "Edit Application" if app_entry else "Add Application"
+        super().__init__(parent, title=title)
         self.existing_entry = app_entry
         self.selected_scanner_app: Optional[DesktopAppInfo] = None
         self.scanned_apps: List[DesktopAppInfo] = []
 
-        title = "Edit Application" if app_entry else "Add Application"
-        self.setWindowTitle(title)
-        self.setMinimumSize(640, 520)
+        self.setMinimumSize(660, 540)
 
         self._init_ui()
         self._load_scanned_apps()
@@ -40,7 +40,7 @@ class AppDialog(QDialog):
             self._populate_existing()
 
     def _init_ui(self) -> None:
-        main_layout = QVBoxLayout(self)
+        main_layout = self.content_layout
         main_layout.setSpacing(12)
 
         self.tab_widget = QTabWidget()
@@ -131,6 +131,9 @@ class AppDialog(QDialog):
 
         btn_layout.addWidget(self.cancel_btn)
 
+        self.save_btn = QPushButton("Save Application")
+        self.save_btn.setDefault(True)
+        self.save_btn.clicked.connect(self._on_save)
         self.save_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);

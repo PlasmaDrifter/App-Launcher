@@ -3,20 +3,20 @@
 from typing import Optional
 
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QPushButton, QMessageBox, QWidget
+    QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QWidget
 )
 
+from ui.frameless import FramelessDialogBase
 
-class ProfileDialog(QDialog):
+
+class ProfileDialog(FramelessDialogBase):
     """Simple modal dialog to get a new or updated profile name."""
 
     def __init__(self, parent: Optional[QWidget] = None, current_name: str = "", title: str = "New Profile"):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setMinimumWidth(340)
+        super().__init__(parent, title=title)
+        self.setMinimumWidth(360)
 
-        main_layout = QVBoxLayout(self)
+        main_layout = self.content_layout
         main_layout.setSpacing(12)
 
         label = QLabel("Profile Name:")
@@ -35,6 +35,9 @@ class ProfileDialog(QDialog):
 
         btn_layout.addWidget(cancel_btn)
 
+        save_btn = QPushButton("Save")
+        save_btn.setDefault(True)
+        save_btn.clicked.connect(self._on_save)
         save_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);

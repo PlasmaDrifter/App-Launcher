@@ -60,8 +60,8 @@ class AppDialog(FramelessDialogBase):
         self.is_custom_mode: bool = False
         self.added_count: int = 0
 
-        self.setMinimumSize(820, 580)
-        self.resize(860, 620)
+        self.setMinimumSize(640, 480)
+        self.resize(760, 520)
 
         self._init_ui()
         self._load_scanned_apps()
@@ -329,7 +329,7 @@ class AppDialog(FramelessDialogBase):
         self.cancel_btn.clicked.connect(self._on_close_clicked)
         btn_layout.addWidget(self.cancel_btn)
 
-        save_btn_text = "Save Changes" if self.is_edit_mode else "Add & Close"
+        save_btn_text = "Save Changes" if self.is_edit_mode else "Add and Close"
         self.save_btn = QPushButton(save_btn_text)
         self.save_btn.setFixedHeight(34)
         self.save_btn.setDefault(True)

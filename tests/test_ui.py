@@ -47,3 +47,63 @@ class TestMainWindowShortcuts(unittest.TestCase):
         self.assertFalse(win.is_paused)
         self.assertIn("Auto-launching", win.countdown_status_label.text())
         win.close()
+
+    def test_card_buttons_and_truncation(self):
+        from config import AppEntry
+        from ui.main_window import AppCardWidget
+
+        long_app = AppEntry(
+            id="long-app",
+            name="Super Extremely Long Application Title That Exceeds Normal Window Width",
+            command="/usr/bin/test",
+            delay_seconds=12,
+            start_minimized=True
+        )
+        self.cfg.profiles[self.cfg.active_profile].apps.append(long_app)
+
+        win = MainWindow(self.cfg, autostart_mode=False)
+        win.show()
+        app.processEvents()
+
+        cards = win.findChildren(AppCardWidget)
+        self.assertGreater(len(cards), 0)
+        card = cards[-1]
+
+        # Verify buttons are visible and within bounds
+        self.assertTrue(card.edit_btn.isVisible())
+        self.assertTrue(card.delete_btn.isVisible())
+        self.assertLess(card.edit_btn.geometry().right(), card.width())
+        self.assertLess(card.delete_btn.geometry().right(), card.width())
+        win.close()
+
+    def test_window_default_widths_and_resizer(self):
+        from ui.app_dialog import AppDialog
+        from PyQt6.QtCore import QPoint
+
+        win = MainWindow(self.cfg, autostart_mode=False)
+        self.assertGreaterEqual(win.width(), 600)
+        self.assertTrue(hasattr(win, "resize_handler"))
+
+        # Verify edge detection on MainWindow
+        handler = win.resize_handler
+        self.assertIn("T", handler._get_edge(win, QPoint(300, 2)))
+        self.assertIn("B", handler._get_edge(win, QPoint(300, win.height() - 2)))
+        self.assertIn("L", handler._get_edge(win, QPoint(2, 400)))
+        self.assertIn("R", handler._get_edge(win, QPoint(win.width() - 2, 400)))
+
+        dlg = AppDialog(win)
+        self.assertLessEqual(dlg.width(), 800)
+        self.assertGreaterEqual(dlg.width(), 640)
+        self.assertTrue(hasattr(dlg, "resize_handler"))
+
+        # Verify edge detection on AppDialog
+        dlg_handler = dlg.resize_handler
+        self.assertIn("T", dlg_handler._get_edge(dlg, QPoint(350, 2)))
+        self.assertIn("B", dlg_handler._get_edge(dlg, QPoint(350, dlg.height() - 2)))
+        self.assertIn("L", dlg_handler._get_edge(dlg, QPoint(2, 250)))
+        self.assertIn("R", dlg_handler._get_edge(dlg, QPoint(dlg.width() - 2, 250)))
+
+        dlg.close()
+        win.close()
+
+

@@ -7,10 +7,10 @@ Complies with zero-emoji guidelines and dynamic path resolution.
 
 from typing import Optional
 
-from PyQt6.QtCore import QPoint, Qt, QTimer
+from PyQt6.QtCore import QPoint, QRect, Qt, QTimer, QEvent, QObject
 from PyQt6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import (
-    QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+    QApplication, QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 )
 
 
@@ -143,6 +143,199 @@ class DraggableHeader(QFrame):
         super().mouseReleaseEvent(event)
 
 
+class FramelessResizeHandler(QObject):
+    """Provides interactive border hovering and manual resizing for frameless windows and dialogs."""
+
+    BORDER_WIDTH = 10
+    CORNER_SIZE = 16
+
+    EDGE_MAP = {
+        "T": Qt.Edge.TopEdge,
+        "B": Qt.Edge.BottomEdge,
+        "L": Qt.Edge.LeftEdge,
+        "R": Qt.Edge.RightEdge,
+        "TL": Qt.Edge.TopEdge | Qt.Edge.LeftEdge,
+        "TR": Qt.Edge.TopEdge | Qt.Edge.RightEdge,
+        "BL": Qt.Edge.BottomEdge | Qt.Edge.LeftEdge,
+        "BR": Qt.Edge.BottomEdge | Qt.Edge.RightEdge,
+    }
+
+    def __init__(self, target_window: QWidget):
+        super().__init__(target_window)
+        self.window = target_window
+        self.window.setMouseTracking(True)
+        self.resizing_edge: Optional[str] = None
+        self.drag_start_pos: Optional[QPoint] = None
+        self.drag_start_geo: Optional[QRect] = None
+        self._cursor_overridden = False
+        self._cursor_shape: Optional[Qt.CursorShape] = None
+
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)
+        self.window.destroyed.connect(self.cleanup)
+
+        self._enable_mouse_tracking(self.window)
+
+    def cleanup(self) -> None:
+        self._restore_cursor()
+        app = QApplication.instance()
+        if app is not None:
+            try:
+                app.removeEventFilter(self)
+            except Exception:
+                pass
+
+    def attach_to_widget(self, widget: QWidget) -> None:
+        """Enables mouse tracking on a widget and its children to ensure mouse move events are delivered."""
+        self._enable_mouse_tracking(widget)
+
+    def _enable_mouse_tracking(self, widget: QWidget) -> None:
+        widget.setMouseTracking(True)
+        for child in widget.findChildren(QWidget):
+            child.setMouseTracking(True)
+
+    def _set_resize_cursor(self, cursor_shape: Qt.CursorShape) -> None:
+        if self._cursor_shape == cursor_shape:
+            return
+        if self._cursor_overridden:
+            QApplication.restoreOverrideCursor()
+            self._cursor_overridden = False
+        QApplication.setOverrideCursor(cursor_shape)
+        self._cursor_overridden = True
+        self._cursor_shape = cursor_shape
+
+    def _restore_cursor(self) -> None:
+        if self._cursor_overridden:
+            QApplication.restoreOverrideCursor()
+            self._cursor_overridden = False
+            self._cursor_shape = None
+
+    def _get_edge(self, watched: QWidget, pos_in_watched: QPoint) -> str:
+        # Avoid intercepting window buttons (Close, Minimize)
+        if isinstance(watched, WindowButton):
+            return ""
+
+        # Map position accurately to window coordinates
+        local_pos = watched.mapTo(self.window, pos_in_watched)
+        x = local_pos.x()
+        y = local_pos.y()
+        w = self.window.width()
+        h = self.window.height()
+
+        if x < 0 or x > w or y < 0 or y > h:
+            return ""
+
+        # Check corners first
+        if x <= self.CORNER_SIZE and y <= self.CORNER_SIZE:
+            return "TL"
+        if x >= w - self.CORNER_SIZE and y <= self.CORNER_SIZE:
+            return "TR"
+        if x <= self.CORNER_SIZE and y >= h - self.CORNER_SIZE:
+            return "BL"
+        if x >= w - self.CORNER_SIZE and y >= h - self.CORNER_SIZE:
+            return "BR"
+
+        # Check edges
+        if y <= self.BORDER_WIDTH:
+            return "T"
+        if y >= h - self.BORDER_WIDTH:
+            return "B"
+        if x <= self.BORDER_WIDTH:
+            return "L"
+        if x >= w - self.BORDER_WIDTH:
+            return "R"
+
+        return ""
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if not isinstance(watched, QWidget) or watched.window() != self.window:
+            return super().eventFilter(watched, event)
+
+        # Dynamically ensure mouse tracking is active as widgets receive hover
+        if event.type() in (QEvent.Type.Enter, QEvent.Type.ChildAdded, QEvent.Type.Show):
+            if not watched.hasMouseTracking():
+                watched.setMouseTracking(True)
+
+        if event.type() == QEvent.Type.MouseMove and isinstance(event, QMouseEvent):
+            if self.resizing_edge is not None and self.drag_start_pos is not None and self.drag_start_geo is not None:
+                delta = event.globalPosition().toPoint() - self.drag_start_pos
+                geo = self.drag_start_geo
+
+                min_w = self.window.minimumWidth()
+                min_h = self.window.minimumHeight()
+
+                new_x = geo.x()
+                new_y = geo.y()
+                new_w = geo.width()
+                new_h = geo.height()
+
+                if "R" in self.resizing_edge:
+                    new_w = max(min_w, geo.width() + delta.x())
+                elif "L" in self.resizing_edge:
+                    new_w = max(min_w, geo.width() - delta.x())
+                    new_x = geo.right() - new_w + 1
+
+                if "B" in self.resizing_edge:
+                    new_h = max(min_h, geo.height() + delta.y())
+                elif "T" in self.resizing_edge:
+                    new_h = max(min_h, geo.height() - delta.y())
+                    new_y = geo.bottom() - new_h + 1
+
+                self.window.setGeometry(new_x, new_y, new_w, new_h)
+                event.accept()
+                return True
+
+            edge = self._get_edge(watched, event.position().toPoint())
+            if edge in ("L", "R"):
+                self._set_resize_cursor(Qt.CursorShape.SizeHorCursor)
+            elif edge in ("T", "B"):
+                self._set_resize_cursor(Qt.CursorShape.SizeVerCursor)
+            elif edge in ("TL", "BR"):
+                self._set_resize_cursor(Qt.CursorShape.SizeFDiagCursor)
+            elif edge in ("TR", "BL"):
+                self._set_resize_cursor(Qt.CursorShape.SizeBDiagCursor)
+            elif self._cursor_overridden:
+                self._restore_cursor()
+
+        elif event.type() == QEvent.Type.MouseButtonPress and isinstance(event, QMouseEvent):
+            if event.button() == Qt.MouseButton.LeftButton:
+                edge = self._get_edge(watched, event.position().toPoint())
+                if edge:
+                    edge_flag = self.EDGE_MAP.get(edge)
+                    wh = self.window.windowHandle()
+                    if not wh and hasattr(self.window, "winId"):
+                        self.window.winId()
+                        wh = self.window.windowHandle()
+
+                    if wh and edge_flag is not None and hasattr(wh, "startSystemResize"):
+                        self._restore_cursor()
+                        if wh.startSystemResize(edge_flag):
+                            event.accept()
+                            return True
+
+                    self.resizing_edge = edge
+                    self.drag_start_pos = event.globalPosition().toPoint()
+                    self.drag_start_geo = self.window.geometry()
+                    event.accept()
+                    return True
+
+        elif event.type() == QEvent.Type.MouseButtonRelease and isinstance(event, QMouseEvent):
+            if self.resizing_edge is not None:
+                self.resizing_edge = None
+                self.drag_start_pos = None
+                self.drag_start_geo = None
+                self._restore_cursor()
+                event.accept()
+                return True
+
+        elif event.type() == QEvent.Type.Leave and watched == self.window:
+            if self.resizing_edge is None and self._cursor_overridden:
+                self._restore_cursor()
+
+        return super().eventFilter(watched, event)
+
+
 class FramelessDialogBase(QDialog):
     """Base modal dialog with frameless window styling and custom title bar."""
 
@@ -152,6 +345,8 @@ class FramelessDialogBase(QDialog):
         self.setWindowRole("dialog")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
         self.setStyleSheet("background-color: #0d121f;")
+
+        self.resize_handler = FramelessResizeHandler(self)
 
         self.content_layout = QVBoxLayout(self)
         self.content_layout.setContentsMargins(16, 12, 16, 16)

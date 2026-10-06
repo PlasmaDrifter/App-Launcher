@@ -11,8 +11,35 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPaintEvent
 from PyQt6.QtWidgets import (
-    QAbstractButton, QHBoxLayout, QLabel, QLayout, QLayoutItem, QPushButton, QWidget
+    QAbstractButton, QHBoxLayout, QLabel, QLayout, QLayoutItem, QPushButton, QWidget, QSizePolicy
 )
+
+
+class ElidedLabel(QLabel):
+    """A QLabel that automatically truncates and elides text with ellipsis (...) to fit available layout space."""
+
+    def __init__(self, text: str = "", parent: Optional[QWidget] = None):
+        super().__init__(text, parent)
+        self._full_text = text
+        self.setToolTip(text)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+
+    def setText(self, text: str) -> None:
+        self._full_text = text
+        self.setToolTip(text)
+        super().setText(text)
+        self.update()
+
+    def minimumSizeHint(self) -> QSize:
+        return QSize(20, self.fontMetrics().height())
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setPen(self.palette().color(self.foregroundRole()))
+        painter.setFont(self.font())
+        metrics = self.fontMetrics()
+        elided = metrics.elidedText(self._full_text, Qt.TextElideMode.ElideRight, max(0, self.width()))
+        painter.drawText(self.rect(), self.alignment() | Qt.AlignmentFlag.AlignVCenter, elided)
 
 
 class ToggleSwitch(QAbstractButton):

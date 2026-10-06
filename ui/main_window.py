@@ -11,25 +11,26 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QListWidget, QListWidgetItem,
     QProgressBar, QMessageBox, QFrame, QApplication, QSizePolicy,
-    QLineEdit, QTextEdit
+    QLineEdit, QTextEdit, QLayout
 )
 
 from config import AppEntry, ConfigManager
 from launcher import AppLauncher
 from ui.app_dialog import AppDialog
-from ui.frameless import DraggableHeader, WindowControls
+from ui.frameless import DraggableHeader, WindowControls, FramelessResizeHandler
 from ui.icon_utils import resolve_icon
 from ui.profile_dialog import ProfileDialog
 from ui.settings_dialog import SettingsDialog
-from ui.widgets import BadgePill, ToggleSwitch
+from ui.widgets import BadgePill, ToggleSwitch, ElidedLabel
 
 MICRO_BTN_STYLE = """
     QPushButton {
         background-color: #1e293b;
         color: #cbd5e1;
         border: 1px solid #334155;
-        border-radius: 4px;
-        font-size: 10px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 500;
         padding: 0px;
     }
     QPushButton:hover {
@@ -44,8 +45,8 @@ MICRO_DELETE_BTN_STYLE = """
         background-color: rgba(239, 68, 68, 0.12);
         color: #f87171;
         border: 1px solid rgba(239, 68, 68, 0.25);
-        border-radius: 4px;
-        font-size: 11px;
+        border-radius: 5px;
+        font-size: 13px;
         font-weight: bold;
         padding: 0px;
     }
@@ -120,11 +121,11 @@ class AppCardWidget(QFrame):
         title_row = QHBoxLayout()
         title_row.setSpacing(6)
 
-        name_label = QLabel(self.app.name)
+        name_label = ElidedLabel(self.app.name)
         title_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Bold)
         name_label.setFont(title_font)
         name_label.setStyleSheet("color: #f8fafc; background: transparent; border: none;")
-        title_row.addWidget(name_label)
+        title_row.addWidget(name_label, stretch=1)
 
         # Small delay badge if configured
         if self.app.delay_seconds > 0:
@@ -134,62 +135,56 @@ class AppCardWidget(QFrame):
                 text_color="#34d399",
                 border_color="rgba(16, 185, 129, 0.35)"
             )
-            title_row.addWidget(delay_badge)
+            title_row.addWidget(delay_badge, stretch=0)
 
         # Minimized badge if configured
         if self.app.start_minimized:
             min_badge = BadgePill(
-                "Minimized",
+                "Min",
                 bg_color="rgba(99, 102, 241, 0.15)",
                 text_color="#818cf8",
                 border_color="rgba(99, 102, 241, 0.35)"
             )
-            title_row.addWidget(min_badge)
+            title_row.addWidget(min_badge, stretch=0)
 
-        title_row.addStretch()
+        title_row.addStretch(0)
         details_layout.addLayout(title_row)
 
         subtitle_text = self.app.desktop_file or self.app.command
-        # Truncate subtitle for compact look
-        if len(subtitle_text) > 42:
-            subtitle_display = subtitle_text[:40] + "..."
-        else:
-            subtitle_display = subtitle_text
-
-        subtitle_label = QLabel(subtitle_display)
-        subtitle_label.setToolTip(subtitle_text)
+        subtitle_label = ElidedLabel(subtitle_text)
         subtitle_label.setStyleSheet("color: #64748b; font-size: 10px; background: transparent; border: none;")
         details_layout.addWidget(subtitle_label)
 
         card_layout.addLayout(details_layout, stretch=1)
 
-        # 4. Compact Micro-Action Buttons
+        # 4. Action Buttons
         action_layout = QHBoxLayout()
-        action_layout.setSpacing(4)
+        action_layout.setSpacing(5)
+        action_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
         self.up_btn = QPushButton("▲")
-        self.up_btn.setFixedSize(22, 22)
+        self.up_btn.setFixedSize(28, 28)
         self.up_btn.setStyleSheet(MICRO_BTN_STYLE)
         self.up_btn.setToolTip("Move up")
         self.up_btn.clicked.connect(self._on_move_up)
         action_layout.addWidget(self.up_btn)
 
         self.down_btn = QPushButton("▼")
-        self.down_btn.setFixedSize(22, 22)
+        self.down_btn.setFixedSize(28, 28)
         self.down_btn.setStyleSheet(MICRO_BTN_STYLE)
         self.down_btn.setToolTip("Move down")
         self.down_btn.clicked.connect(self._on_move_down)
         action_layout.addWidget(self.down_btn)
 
         self.edit_btn = QPushButton("Edit")
-        self.edit_btn.setFixedSize(32, 22)
+        self.edit_btn.setFixedSize(44, 28)
         self.edit_btn.setStyleSheet(MICRO_BTN_STYLE)
         self.edit_btn.setToolTip("Edit application details")
         self.edit_btn.clicked.connect(self._on_edit)
         action_layout.addWidget(self.edit_btn)
 
-        self.delete_btn = QPushButton("x")
-        self.delete_btn.setFixedSize(22, 22)
+        self.delete_btn = QPushButton("✕")
+        self.delete_btn.setFixedSize(28, 28)
         self.delete_btn.setStyleSheet(MICRO_DELETE_BTN_STYLE)
         self.delete_btn.setToolTip("Remove application")
         self.delete_btn.clicked.connect(self._on_delete)
@@ -227,7 +222,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("AutoLaunch")
         self.setMinimumSize(480, 700)
-        self.resize(520, 780)
+        self.resize(600, 780)
         flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
         if self.autostart_mode:
             flags |= Qt.WindowType.WindowStaysOnTopHint
@@ -265,6 +260,9 @@ class MainWindow(QMainWindow):
         """)
         self.setCentralWidget(central_widget)
 
+        self.resize_handler = FramelessResizeHandler(self)
+        self.resize_handler.attach_to_widget(central_widget)
+
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(14, 12, 14, 14)
         main_layout.setSpacing(10)
@@ -298,7 +296,7 @@ class MainWindow(QMainWindow):
         title_lbl.setFont(title_font)
         title_lbl.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
 
-        version_lbl = QLabel("v0.1.2")
+        version_lbl = QLabel("v0.1.3")
         version_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Normal)
         version_lbl.setFont(version_font)
         version_lbl.setStyleSheet("color: #64748b; border: none; background: transparent; padding-top: 4px;")

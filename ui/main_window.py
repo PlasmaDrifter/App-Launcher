@@ -633,15 +633,14 @@ class MainWindow(QMainWindow):
                 font-weight: 500;
             }
             QPushButton:hover {
-                background-color: #28282e;
-                border-color: #475569;
+                background-color: rgba(226, 232, 240, 0.15);
+                border-color: #e2e8f0;
                 color: #ffffff;
             }
             QPushButton:pressed {
                 background-color: #18181b;
             }
         """)
-        self.close_btn.setToolTip("Close AutoLaunch without launching applications")
         self.close_btn.clicked.connect(self.close)
         bottom_layout.addWidget(self.close_btn)
 
@@ -878,8 +877,8 @@ class MainWindow(QMainWindow):
                 font-weight: 500;
             }}
             QPushButton:hover {{
-                background-color: {theme.card_hover};
-                border-color: #475569;
+                background-color: {theme.accent_subtle};
+                border-color: {theme.accent_hover};
                 color: #ffffff;
             }}
             QPushButton:pressed {{

@@ -8,7 +8,8 @@ from typing import Optional
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QSpinBox, QCheckBox, QGroupBox, QFormLayout, QMessageBox, QWidget
+    QPushButton, QSpinBox, QCheckBox, QGroupBox, QFormLayout, QMessageBox, QWidget,
+    QComboBox
 )
 
 from autostart import AutostartManager
@@ -22,13 +23,14 @@ class SettingsDialog(FramelessDialogBase):
     def __init__(self, config_manager: ConfigManager, parent: Optional[QWidget] = None):
         super().__init__(parent, title="AutoLaunch Settings")
         self.config_manager = config_manager
-        self.setMinimumWidth(440)
+        self.setMinimumWidth(500)
+        self.resize(520, 780)
 
         self._init_ui()
 
     def _init_ui(self) -> None:
         main_layout = self.content_layout
-        main_layout.setSpacing(16)
+        main_layout.setSpacing(14)
 
         # Countdown Group
         countdown_group = QGroupBox("Countdown & Auto-Launch Timer")
@@ -111,6 +113,38 @@ class SettingsDialog(FramelessDialogBase):
 
         main_layout.addWidget(behavior_group)
 
+        # Appearance / Visual Theme Group
+        theme_group = QGroupBox("Appearance / Interface Style")
+        theme_layout = QVBoxLayout(theme_group)
+        theme_layout.setSpacing(8)
+
+        theme_picker_layout = QHBoxLayout()
+        theme_lbl = QLabel("Interface Look:")
+        theme_lbl.setStyleSheet("color: #94a3b8; font-size: 12px;")
+        theme_picker_layout.addWidget(theme_lbl)
+
+        self.style_combo = QComboBox()
+        self.style_combo.addItem("Modern Acrylic (Cards & Toggles)", "modern")
+        self.style_combo.addItem("Classic Plain (Standard Desktop Rows)", "classic")
+        current_style = getattr(self.config_manager, "ui_style", "modern")
+        if current_style == "classic":
+            self.style_combo.setCurrentIndex(1)
+        else:
+            self.style_combo.setCurrentIndex(0)
+        theme_picker_layout.addWidget(self.style_combo)
+        theme_picker_layout.addStretch()
+        theme_layout.addLayout(theme_picker_layout)
+
+        theme_desc = QLabel(
+            "Switch between the sleek modern acrylic portrait card design and the original clean, "
+            "plain desktop row interface without losing any profiles or settings."
+        )
+        theme_desc.setWordWrap(True)
+        theme_desc.setStyleSheet("color: #64748b; font-size: 11px;")
+        theme_layout.addWidget(theme_desc)
+
+        main_layout.addWidget(theme_group)
+
         # Action Buttons
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
@@ -158,6 +192,7 @@ class SettingsDialog(FramelessDialogBase):
         self.config_manager.countdown_seconds = self.countdown_spin.value()
         self.config_manager.launch_minimized = self.launch_minimized_check.isChecked()
         self.config_manager.autostart_enabled = self.autostart_check.isChecked()
+        self.config_manager.ui_style = str(self.style_combo.currentData() or "modern")
 
         # Update system autostart desktop file
         AutostartManager.set_autostart(self.autostart_check.isChecked())

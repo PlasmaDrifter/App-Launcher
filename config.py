@@ -100,6 +100,7 @@ class ConfigManager:
         self.enable_countdown: bool = True
         self.launch_minimized: bool = False
         self.autostart_enabled: bool = True
+        self.ui_style: str = "modern"
         self.profiles: Dict[str, Profile] = {}
 
         self.load()
@@ -111,6 +112,7 @@ class ConfigManager:
             "enable_countdown": True,
             "launch_minimized": False,
             "autostart_enabled": True,
+            "ui_style": "modern",
             "profiles": {
                 self.DEFAULT_PROFILE_NAME: {
                     "apps": []
@@ -138,6 +140,9 @@ class ConfigManager:
         self.enable_countdown = bool(data.get("enable_countdown", True))
         self.launch_minimized = bool(data.get("launch_minimized", False))
         self.autostart_enabled = bool(data.get("autostart_enabled", True))
+        self.ui_style = str(data.get("ui_style", "modern")).lower()
+        if self.ui_style not in ("modern", "classic"):
+            self.ui_style = "modern"
 
         profiles_raw = data.get("profiles", {})
         self.profiles = {}
@@ -161,6 +166,7 @@ class ConfigManager:
             "enable_countdown": self.enable_countdown,
             "launch_minimized": self.launch_minimized,
             "autostart_enabled": self.autostart_enabled,
+            "ui_style": self.ui_style,
             "profiles": {
                 name: {"apps": [app.to_dict() for app in prof.apps]}
                 for name, prof in self.profiles.items()

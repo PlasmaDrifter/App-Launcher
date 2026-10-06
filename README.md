@@ -3,7 +3,11 @@
 AutoLaunch is a modern, native PyQt6 desktop application designed for Linux desktop environments (optimized for KDE Plasma 6 Wayland and X11). It manages and coordinates startup applications on user login, providing an interactive checklist, profiles, configurable countdown timer, startup delay sequencing, window minimization controls, and clean self-termination upon launching.
 
 <p align="center">
-  <img src="screenshots/autolaunch-main-window.png" alt="AutoLaunch Main Window" width="480">
+  <img src="screenshots/autolaunch-main-window.png" alt="AutoLaunch Main Window" width="320">
+  &nbsp;&nbsp;
+  <img src="screenshots/autolaunch-settings.png" alt="AutoLaunch Settings Dialog" width="320">
+  &nbsp;&nbsp;
+  <img src="screenshots/autolaunch-add-app.png" alt="AutoLaunch Add Application Dialog" width="320">
 </p>
 
 ---

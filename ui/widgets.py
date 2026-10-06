@@ -63,11 +63,11 @@ class ToggleSwitch(QAbstractButton):
         radius = h / 2.0
 
         # Background track color: interpolate between inactive and active
-        # Inactive: #334155, Active: #38bdf8
+        # Inactive: #334155 (slate-700), Active: #0369a1 (muted dark sky/cyan-slate)
         t = self._thumb_position
-        r = int(51 + (56 - 51) * t)
-        g = int(65 + (189 - 65) * t)
-        b = int(85 + (248 - 85) * t)
+        r = int(51 + (3 - 51) * t)
+        g = int(65 + (105 - 65) * t)
+        b = int(85 + (161 - 85) * t)
         track_color = QColor(r, g, b)
 
         # Draw track
@@ -84,8 +84,8 @@ class ToggleSwitch(QAbstractButton):
         p.setBrush(QBrush(QColor(0, 0, 0, 40)))
         p.drawEllipse(QRectF(thumb_x - 0.5, thumb_y + 0.5, thumb_diameter + 1, thumb_diameter + 1))
 
-        # Thumb body
-        p.setBrush(QBrush(QColor(255, 255, 255)))
+        # Thumb body (soft off-white)
+        p.setBrush(QBrush(QColor(226, 232, 240)))
         p.drawEllipse(QRectF(thumb_x, thumb_y, thumb_diameter, thumb_diameter))
 
         p.end()

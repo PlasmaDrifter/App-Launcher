@@ -14,6 +14,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QPalette, QColor
 from PyQt6.QtWidgets import QApplication
 
@@ -87,6 +88,9 @@ def main() -> None:
     if app_icon is not None and not app_icon.isNull():
         window.setWindowIcon(app_icon)
     window.show()
+    window.raise_()
+    window.activateWindow()
+    QTimer.singleShot(150, lambda: (window.raise_(), window.activateWindow()))
 
     sys.exit(app.exec())
 

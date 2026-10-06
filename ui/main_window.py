@@ -5,12 +5,13 @@ badge pills, glowing progress indicators, and streamlined vertical layout.
 Complies with zero-emoji guidelines and dynamic path resolution.
 """
 
-from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt, QTimer, QSize, QEvent, QObject
+from PyQt6.QtGui import QFont, QKeyEvent
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QListWidget, QListWidgetItem,
-    QProgressBar, QMessageBox, QFrame, QApplication, QSizePolicy
+    QProgressBar, QMessageBox, QFrame, QApplication, QSizePolicy,
+    QLineEdit, QTextEdit
 )
 
 from config import AppEntry, ConfigManager
@@ -225,10 +226,12 @@ class MainWindow(QMainWindow):
         self.is_paused = False
 
         self.setWindowTitle("AutoLaunch")
-        # Wider portrait orientation to accommodate labels comfortably
         self.setMinimumSize(480, 700)
         self.resize(520, 780)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
+        if self.autostart_mode:
+            flags |= Qt.WindowType.WindowStaysOnTopHint
+        self.setWindowFlags(flags)
 
         # Countdown timer
         self.timer = QTimer(self)
@@ -247,6 +250,10 @@ class MainWindow(QMainWindow):
             self._start_countdown()
         else:
             self.countdown_card.hide()
+
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)
 
     def _init_ui(self) -> None:
         central_widget = QWidget()
@@ -291,7 +298,7 @@ class MainWindow(QMainWindow):
         title_lbl.setFont(title_font)
         title_lbl.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
 
-        version_lbl = QLabel("v0.1.1")
+        version_lbl = QLabel("v0.1.2")
         version_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Normal)
         version_lbl.setFont(version_font)
         version_lbl.setStyleSheet("color: #64748b; border: none; background: transparent; padding-top: 4px;")
@@ -584,15 +591,19 @@ class MainWindow(QMainWindow):
         self.progress_bar.setRange(0, max(1, self.config_manager.countdown_seconds))
         self.progress_bar.setValue(self.remaining_seconds)
         self.pause_resume_btn.setText("Pause")
+        self.pause_resume_btn.setToolTip("Pause countdown (Space)")
         self._update_countdown_label()
         self.countdown_card.show()
+        self.pause_resume_btn.setFocus()
+        self.raise_()
+        self.activateWindow()
         self.timer.start(1000)
 
     def _update_countdown_label(self) -> None:
         current_profile = self.config_manager.get_current_profile()
         enabled_count = sum(1 for a in current_profile.apps if a.enabled)
         self.countdown_status_label.setText(
-            f"Auto-launching in {self.remaining_seconds}s ({enabled_count} apps enabled)"
+            f"Auto-launching in {self.remaining_seconds}s [Space to pause] ({enabled_count} apps enabled)"
         )
         self.progress_bar.setValue(self.remaining_seconds)
 
@@ -611,10 +622,34 @@ class MainWindow(QMainWindow):
         self.is_paused = not self.is_paused
         if self.is_paused:
             self.pause_resume_btn.setText("Resume")
-            self.countdown_status_label.setText(f"Paused at {self.remaining_seconds}s")
+            self.pause_resume_btn.setToolTip("Resume countdown (Space)")
+            self.countdown_status_label.setText(f"Paused at {self.remaining_seconds}s [Space to resume]")
         else:
             self.pause_resume_btn.setText("Pause")
+            self.pause_resume_btn.setToolTip("Pause countdown (Space)")
             self._update_countdown_label()
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Space and self.countdown_card.isVisible():
+            self._toggle_pause_countdown()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
+            if event.key() == Qt.Key.Key_Space and self.countdown_card.isVisible():
+                if isinstance(watched, QWidget) and watched.window() == self:
+                    if not isinstance(watched, (QLineEdit, QTextEdit)):
+                        self._toggle_pause_countdown()
+                        return True
+        return super().eventFilter(watched, event)
+
+    def closeEvent(self, event) -> None:
+        app = QApplication.instance()
+        if app is not None:
+            app.removeEventFilter(self)
+        super().closeEvent(event)
 
     def _cancel_countdown(self) -> None:
         self.timer.stop()

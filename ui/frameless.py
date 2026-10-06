@@ -7,10 +7,10 @@ Complies with zero-emoji guidelines and dynamic path resolution.
 
 from typing import Optional
 
-from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtCore import QPoint, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QMouseEvent
 from PyQt6.QtWidgets import (
-    QDialog, QFrame, QGraphicsDropShadowEffect, QHBoxLayout,
+    QApplication, QDialog, QFrame, QGraphicsDropShadowEffect, QHBoxLayout,
     QLabel, QPushButton, QVBoxLayout, QWidget
 )
 
@@ -183,3 +183,45 @@ class FramelessDialogBase(QDialog):
         header_layout.addWidget(self.controls)
 
         self.content_layout.addWidget(self.dialog_header)
+
+    def center_over_parent(self) -> None:
+        """Positions the dialog centered over its parent window, or screen center if no parent."""
+        parent = self.parentWidget()
+        if parent:
+            parent_geo = parent.frameGeometry()
+            dlg_width = self.width() if self.width() > 0 else self.sizeHint().width()
+            dlg_height = self.height() if self.height() > 0 else self.sizeHint().height()
+
+            # Calculate centered position relative to parent window
+            x = parent_geo.x() + (parent_geo.width() - dlg_width) // 2
+            y = parent_geo.y() + (parent_geo.height() - dlg_height) // 2
+
+            # Identify which display screen the parent window is currently on
+            app = QApplication.instance()
+            screen = None
+            if app:
+                screen = app.screenAt(parent_geo.center())
+            if not screen:
+                screen = parent.screen() or self.screen()
+
+            # Clamp within that screen's available geometry so dialog doesn't overflow
+            if screen:
+                screen_geo = screen.availableGeometry()
+                x = max(screen_geo.left(), min(x, screen_geo.right() - dlg_width))
+                y = max(screen_geo.top(), min(y, screen_geo.bottom() - dlg_height))
+
+            self.move(x, y)
+        else:
+            screen = self.screen()
+            if screen:
+                screen_geo = screen.availableGeometry()
+                x = screen_geo.left() + (screen_geo.width() - self.width()) // 2
+                y = screen_geo.top() + (screen_geo.height() - self.height()) // 2
+                self.move(x, y)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.center_over_parent()
+        # Schedule an immediate adjustment on the event loop in case compositor/window manager
+        # sets initial geometry during window map
+        QTimer.singleShot(0, self.center_over_parent)

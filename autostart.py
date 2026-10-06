@@ -72,12 +72,12 @@ Type=Application
 Version=1.0
 Name=AutoLaunch
 GenericName=Startup Application Launcher
-Comment=Configure and launch startup applications on desktop boot
+Comment=Configure Launch Apps
 {exec_line}
 {icon_path}
 Terminal=false
 StartupNotify=true
-Categories=Utility;
+Categories=LocalTools;
 X-GNOME-Autostart-enabled=true
 StartupWMClass=autolaunch
 X-KDE-Wayland-AppId=autolaunch

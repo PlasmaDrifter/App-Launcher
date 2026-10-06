@@ -28,7 +28,7 @@ Exec=autolaunch
 Icon=autolaunch
 Terminal=false
 StartupNotify=true
-Categories=LocalTools;
+Categories=Utility;
 StartupWMClass=autolaunch
 X-KDE-Wayland-AppId=autolaunch
 EOF
@@ -46,7 +46,7 @@ Exec=autolaunch --autostart
 Icon=autolaunch
 Terminal=false
 StartupNotify=true
-Categories=LocalTools;
+Categories=Utility;
 X-GNOME-Autostart-enabled=true
 StartupWMClass=autolaunch
 X-KDE-Wayland-AppId=autolaunch

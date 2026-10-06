@@ -732,15 +732,16 @@ class MainWindow(QMainWindow):
 
     def _on_add_app(self) -> None:
         self._pause_for_user_action()
-        dialog = AppDialog(self)
-        if dialog.exec():
-            new_app = dialog.get_result()
-            if new_app:
-                profile_name = self.config_manager.active_profile
-                self.config_manager.add_app_to_profile(profile_name, new_app)
-                self._refresh_app_list()
-                if self.timer.isActive():
-                    self._update_countdown_label()
+
+        def _handle_batch_added(app: AppEntry) -> None:
+            profile_name = self.config_manager.active_profile
+            self.config_manager.add_app_to_profile(profile_name, app)
+            self._refresh_app_list()
+            if self.timer.isActive():
+                self._update_countdown_label()
+
+        dialog = AppDialog(self, on_app_added=_handle_batch_added)
+        dialog.exec()
 
     def edit_app(self, app: AppEntry) -> None:
         self._pause_for_user_action()

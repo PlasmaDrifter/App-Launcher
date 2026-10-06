@@ -28,10 +28,12 @@ class DesktopAppInfo:
     icon_path: Optional[str] = None
     startup_wm_class: str = ""
     kde_app_id: str = ""
+    categories: List[str] = None
 
     def search_text(self) -> str:
         """Returns consolidated lowercase string for fuzzy searching."""
-        return f"{self.name} {self.generic_name} {self.comment} {self.clean_command} {self.desktop_id}".lower()
+        cats = " ".join(self.categories or [])
+        return f"{self.name} {self.generic_name} {self.comment} {self.clean_command} {self.desktop_id} {cats}".lower()
 
 
 def clean_desktop_exec(raw_exec: str) -> str:
@@ -176,6 +178,8 @@ class DesktopScanner:
         icon = section.get("Icon", "").strip()
         startup_wm_class = section.get("StartupWMClass", "").strip()
         kde_app_id = section.get("X-KDE-Wayland-AppId", "").strip()
+        categories_raw = section.get("Categories", "").strip()
+        categories = [c.strip() for c in categories_raw.split(";") if c.strip()]
 
         clean_cmd = clean_desktop_exec(exec_cmd)
         icon_path = find_icon_file(icon)
@@ -192,6 +196,7 @@ class DesktopScanner:
             icon_path=icon_path,
             startup_wm_class=startup_wm_class,
             kde_app_id=kde_app_id,
+            categories=categories,
         )
         setattr(info, "_no_display", no_display)
         return info

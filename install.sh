@@ -55,9 +55,13 @@ chmod 644 "${AUTOSTART_DIR}/autolaunch.desktop"
 
 # 4. Install icons into user icon theme
 ICON_SCALABLE_DIR="${HOME}/.local/share/icons/hicolor/scalable/apps"
-mkdir -p "${ICON_SCALABLE_DIR}"
+ICON_512_DIR="${HOME}/.local/share/icons/hicolor/512x512/apps"
+mkdir -p "${ICON_SCALABLE_DIR}" "${ICON_512_DIR}"
 if [ -f "${SCRIPT_DIR}/assets/autolaunch.svg" ]; then
     cp "${SCRIPT_DIR}/assets/autolaunch.svg" "${ICON_SCALABLE_DIR}/autolaunch.svg"
+fi
+if [ -f "${SCRIPT_DIR}/assets/autolaunch.png" ]; then
+    cp "${SCRIPT_DIR}/assets/autolaunch.png" "${ICON_512_DIR}/autolaunch.png"
 fi
 if command -v gtk-update-icon-cache >/dev/null 2>&1; then
     gtk-update-icon-cache -f -t "${HOME}/.local/share/icons/hicolor" >/dev/null 2>&1 || true
@@ -67,4 +71,5 @@ echo "AutoLaunch installed successfully."
 echo "Binary link: ${BIN_DIR}/autolaunch"
 echo "Menu entry: ${APP_DIR}/autolaunch.desktop"
 echo "Autostart:  ${AUTOSTART_DIR}/autolaunch.desktop"
-echo "Icon:       ${ICON_SCALABLE_DIR}/autolaunch.svg"
+echo "Icon (SVG): ${ICON_SCALABLE_DIR}/autolaunch.svg"
+echo "Icon (PNG): ${ICON_512_DIR}/autolaunch.png"

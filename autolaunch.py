@@ -68,18 +68,24 @@ def main() -> None:
     app.setDesktopFileName("autolaunch")
 
     # App icon
-    assets_icon = SCRIPT_DIR / "assets" / "autolaunch.svg"
-    if assets_icon.is_file():
-        app.setWindowIcon(QIcon(str(assets_icon)))
-    else:
+    app_icon = None
+    for icon_name in ("autolaunch.png", "autolaunch.svg"):
+        icon_path = SCRIPT_DIR / "assets" / icon_name
+        if icon_path.is_file():
+            app_icon = QIcon(str(icon_path))
+            if not app_icon.isNull():
+                break
+    if app_icon is None or app_icon.isNull():
         app_icon = QIcon.fromTheme("autolaunch", QIcon.fromTheme("system-run"))
-        if not app_icon.isNull():
-            app.setWindowIcon(app_icon)
+    if app_icon is not None and not app_icon.isNull():
+        app.setWindowIcon(app_icon)
 
     apply_dark_theme(app)
     app.setStyleSheet(MODERN_DARK_STYLESHEET)
 
     window = MainWindow(config_manager, autostart_mode=args.autostart)
+    if app_icon is not None and not app_icon.isNull():
+        window.setWindowIcon(app_icon)
     window.show()
 
     sys.exit(app.exec())

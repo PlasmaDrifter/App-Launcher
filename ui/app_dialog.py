@@ -8,6 +8,7 @@ Provides a modern, high-efficiency two-pane picker:
 - Clean dedicated edit mode when modifying an existing application.
 """
 
+import html
 import uuid
 from pathlib import Path
 from typing import Callable, List, Optional
@@ -114,8 +115,8 @@ class AppDialog(FramelessDialogBase):
         self.is_custom_mode: bool = False
         self.added_count: int = 0
 
-        self.setMinimumSize(640, 540)
-        self.resize(740, 620)
+        self.setMinimumSize(480, 700)
+        self.resize(600, 780)
 
         self._init_ui()
         self._load_scanned_apps()
@@ -252,6 +253,13 @@ class AppDialog(FramelessDialogBase):
         header_text_layout.addWidget(self.preview_desc_label)
 
         header_card.addLayout(header_text_layout, stretch=1)
+
+        # Inline feedback badge (e.g. "Added 'App' (1 added)")
+        self.feedback_label = QLabel()
+        self.feedback_label.setStyleSheet("color: #7ab89b; font-size: 11px; font-weight: 600; border: none; background: transparent; padding-right: 4px;")
+        self.feedback_label.hide()
+        header_card.addWidget(self.feedback_label)
+
         inspector_layout.addLayout(header_card)
 
         # Divider
@@ -369,29 +377,22 @@ class AppDialog(FramelessDialogBase):
 
         # ----------------- BOTTOM DIALOG ACTIONS -----------------
         btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(0, 4, 0, 0)
         btn_layout.setSpacing(10)
 
-        # Inline feedback label on the bottom left
-        self.feedback_label = QLabel()
-        self.feedback_label.setStyleSheet("color: #6297bf; font-size: 12px; font-weight: 600; border: none; background: transparent;")
-        self.feedback_label.hide()
-        btn_layout.addWidget(self.feedback_label)
-
-        btn_layout.addStretch()
-
         if self.is_edit_mode:
-            self.save_btn = QPushButton("Save")
-            self.save_btn.setFixedHeight(34)
+            self.save_btn = QPushButton("Save Changes")
+            self.save_btn.setFixedHeight(36)
             self.save_btn.setDefault(True)
             self.save_btn.clicked.connect(self._on_save_and_close)
             self.save_btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
-                    color: #e2e8f0;
+                    color: #f8fafc;
                     font-weight: bold;
+                    font-size: 13px;
                     border: 1px solid #376388;
                     border-radius: 6px;
-                    padding: 0 24px;
                 }
                 QPushButton:hover {
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
@@ -399,38 +400,67 @@ class AppDialog(FramelessDialogBase):
                     color: #ffffff;
                 }
             """)
-            btn_layout.addWidget(self.save_btn)
+            btn_layout.addWidget(self.save_btn, stretch=1)
 
             self.cancel_btn = QPushButton("Cancel")
-            self.cancel_btn.setFixedHeight(34)
+            self.cancel_btn.setFixedHeight(36)
+            self.cancel_btn.setMinimumWidth(100)
+            self.cancel_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #1e293b;
+                    color: #94a3b8;
+                    border: 1px solid #334155;
+                    border-radius: 6px;
+                    font-size: 13px;
+                }
+                QPushButton:hover {
+                    background-color: #334155;
+                    color: #ffffff;
+                }
+            """)
             self.cancel_btn.clicked.connect(self.reject)
-            btn_layout.addWidget(self.cancel_btn)
+            btn_layout.addWidget(self.cancel_btn, stretch=0)
         else:
-            self.add_btn = QPushButton("Add")
-            self.add_btn.setFixedHeight(34)
+            self.add_btn = QPushButton("+ Add Application to Profile")
+            self.add_btn.setFixedHeight(36)
             self.add_btn.setDefault(True)
             self.add_btn.clicked.connect(self._on_add_clicked)
             self.add_btn.setStyleSheet("""
                 QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
-                    color: #e2e8f0;
-                    font-weight: bold;
-                    border: 1px solid #376388;
+                    background-color: #1e293b;
+                    color: #6297bf;
+                    border: 1px solid rgba(98, 151, 191, 0.4);
                     border-radius: 6px;
-                    padding: 0 26px;
+                    font-weight: bold;
+                    padding: 0 12px;
+                    font-size: 13px;
                 }
                 QPushButton:hover {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
-                    border-color: #4578a3;
-                    color: #ffffff;
+                    background-color: rgba(70, 115, 150, 0.15);
+                    border-color: #6297bf;
+                    color: #cbd5e1;
                 }
             """)
-            btn_layout.addWidget(self.add_btn)
+            btn_layout.addWidget(self.add_btn, stretch=1)
 
             self.close_btn = QPushButton("Close")
-            self.close_btn.setFixedHeight(34)
+            self.close_btn.setFixedHeight(36)
+            self.close_btn.setMinimumWidth(100)
+            self.close_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #1e293b;
+                    color: #94a3b8;
+                    border: 1px solid #334155;
+                    border-radius: 6px;
+                    font-size: 13px;
+                }
+                QPushButton:hover {
+                    background-color: #334155;
+                    color: #cbd5e1;
+                }
+            """)
             self.close_btn.clicked.connect(self._on_close_clicked)
-            btn_layout.addWidget(self.close_btn)
+            btn_layout.addWidget(self.close_btn, stretch=0)
 
             # Compatibility aliases
             self.cancel_btn = self.close_btn
@@ -465,14 +495,23 @@ class AppDialog(FramelessDialogBase):
             icon = resolve_icon(app.icon_name, app.icon_path)
             item.setIcon(icon)
 
-            tooltip_lines = [app.name]
+            escaped_name = html.escape(app.name.strip())
+            tooltip_html = [
+                f'<div style="font-family: sans-serif; line-height: 1.4;">',
+                f'  <div style="font-size: 14px; font-weight: bold; color: #f8fafc; margin-bottom: 4px;">{escaped_name}</div>'
+            ]
             if app.generic_name:
-                tooltip_lines.append(f"Category: {app.generic_name}")
+                escaped_cat = html.escape(app.generic_name.strip())
+                tooltip_html.append(f'  <div style="font-size: 13px; color: #7bb2db;">Category: <span style="color: #f8fafc;">{escaped_cat}</span></div>')
             if app.comment:
-                tooltip_lines.append(f"Description: {app.comment}")
+                escaped_desc = html.escape(app.comment.strip())
+                tooltip_html.append(f'  <div style="font-size: 13px; color: #7bb2db;">Description: <span style="color: #f8fafc;">{escaped_desc}</span></div>')
             if app.clean_command:
-                tooltip_lines.append(f"Command: {app.clean_command}")
-            item.setToolTip("\n".join(tooltip_lines))
+                escaped_cmd = html.escape(app.clean_command.strip())
+                tooltip_html.append(f'  <div style="font-size: 13px; color: #7bb2db;">Command: <span style="color: #6ee7b7;">{escaped_cmd}</span></div>')
+            tooltip_html.append('</div>')
+
+            item.setToolTip("\n".join(tooltip_html))
 
             item.setData(Qt.ItemDataRole.UserRole, app)
             item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
@@ -480,6 +519,15 @@ class AppDialog(FramelessDialogBase):
 
         count = len(apps)
         self.list_summary_label.setText(f"{count} application{'s' if count != 1 else ''} available")
+
+        # Always start at the top of the category / list
+        self.app_list_widget.verticalScrollBar().setValue(0)
+        self.app_list_widget.horizontalScrollBar().setValue(0)
+        if self.app_list_widget.rowCount() > 0:
+            top_item = self.app_list_widget.item(0, 0)
+            if top_item is not None:
+                self.app_list_widget.scrollToItem(top_item, QAbstractItemView.ScrollHint.PositionAtTop)
+                self.app_list_widget.setCurrentCell(0, 0)
 
     def _on_category_clicked(self, category_filter) -> None:
         self.is_custom_mode = False

@@ -357,7 +357,7 @@ class MainWindow(QMainWindow):
         title_lbl.setFont(title_font)
         title_lbl.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
 
-        version_lbl = QLabel("v0.1.4")
+        version_lbl = QLabel("v0.1.5")
         version_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Normal)
         version_lbl.setFont(version_font)
         version_lbl.setStyleSheet("color: #64748b; border: none; background: transparent; padding-top: 4px;")
@@ -569,7 +569,7 @@ class MainWindow(QMainWindow):
             QPushButton:hover {
                 background-color: rgba(70, 115, 150, 0.15);
                 border-color: #6297bf;
-                color: #ffffff;
+                color: #cbd5e1;
             }
         """)
         self.add_app_btn.clicked.connect(self._on_add_app)
@@ -612,7 +612,7 @@ class MainWindow(QMainWindow):
             }
             QPushButton:hover {
                 background-color: #334155;
-                color: #ffffff;
+                color: #cbd5e1;
             }
         """)
         self.close_btn.setToolTip("Close AutoLaunch without launching applications")

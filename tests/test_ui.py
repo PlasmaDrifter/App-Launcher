@@ -92,16 +92,17 @@ class TestMainWindowShortcuts(unittest.TestCase):
         self.assertIn("R", handler._get_edge(win, QPoint(win.width() - 2, 400)))
 
         dlg = AppDialog(win)
-        self.assertLessEqual(dlg.width(), 800)
-        self.assertGreaterEqual(dlg.width(), 640)
+        self.assertEqual(dlg.width(), win.width())
+        self.assertEqual(dlg.height(), win.height())
+        self.assertEqual(dlg.minimumSize(), win.minimumSize())
         self.assertTrue(hasattr(dlg, "resize_handler"))
 
         # Verify edge detection on AppDialog
         dlg_handler = dlg.resize_handler
-        self.assertIn("T", dlg_handler._get_edge(dlg, QPoint(350, 2)))
-        self.assertIn("B", dlg_handler._get_edge(dlg, QPoint(350, dlg.height() - 2)))
-        self.assertIn("L", dlg_handler._get_edge(dlg, QPoint(2, 250)))
-        self.assertIn("R", dlg_handler._get_edge(dlg, QPoint(dlg.width() - 2, 250)))
+        self.assertIn("T", dlg_handler._get_edge(dlg, QPoint(300, 2)))
+        self.assertIn("B", dlg_handler._get_edge(dlg, QPoint(300, dlg.height() - 2)))
+        self.assertIn("L", dlg_handler._get_edge(dlg, QPoint(2, 400)))
+        self.assertIn("R", dlg_handler._get_edge(dlg, QPoint(dlg.width() - 2, 400)))
 
         dlg.close()
         win.close()
@@ -113,7 +114,7 @@ class TestMainWindowShortcuts(unittest.TestCase):
         added_apps = []
         dlg = AppDialog(on_app_added=lambda app: added_apps.append(app))
         dlg.show()
-        self.assertEqual(dlg.add_btn.text(), "Add")
+        self.assertEqual(dlg.add_btn.text(), "+ Add Application to Profile")
         self.assertEqual(dlg.close_btn.text(), "Close")
 
         # Simulate adding an application
@@ -139,11 +140,11 @@ class TestMainWindowShortcuts(unittest.TestCase):
         dlg.close_btn.click()
         self.assertFalse(dlg.isVisible())
 
-        # Verify Edit Mode uses Cancel and Save
+        # Verify Edit Mode uses Cancel and Save Changes
         existing = AppEntry(name="Existing App", command="existing-cmd")
         edit_dlg = AppDialog(app_entry=existing)
         self.assertEqual(edit_dlg.cancel_btn.text(), "Cancel")
-        self.assertEqual(edit_dlg.save_btn.text(), "Save")
+        self.assertEqual(edit_dlg.save_btn.text(), "Save Changes")
         edit_dlg.close()
 
     def test_default_profile_ui_workflow(self):

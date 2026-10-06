@@ -12,8 +12,7 @@ from PyQt6.QtGui import QFont, QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QListWidget, QListWidgetItem,
-    QProgressBar, QMessageBox, QFrame, QApplication, QSizePolicy,
-    QCheckBox
+    QProgressBar, QMessageBox, QFrame, QApplication, QSizePolicy
 )
 
 from config import AppEntry, ConfigManager
@@ -23,7 +22,7 @@ from ui.frameless import DraggableHeader, WindowControls
 from ui.icon_utils import resolve_icon
 from ui.profile_dialog import ProfileDialog
 from ui.settings_dialog import SettingsDialog
-from ui.widgets import BadgePill, CheckMarkBox, ToggleSwitch
+from ui.widgets import BadgePill, ToggleSwitch
 
 
 class AppCardWidget(QFrame):
@@ -214,121 +213,6 @@ class AppCardWidget(QFrame):
         self.parent_window.delete_app(self.app)
 
 
-class ClassicAppRowWidget(QWidget):
-    """Traditional clean list row widget representing an application in classic mode."""
-
-    def __init__(self, app: AppEntry, parent_window: "MainWindow"):
-        super().__init__()
-        self.app = app
-        self.parent_window = parent_window
-        self._init_ui()
-
-    def _init_ui(self) -> None:
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 6, 8, 6)
-        layout.setSpacing(10)
-
-        # 1. Standard Checkbox
-        self.checkbox = CheckMarkBox(size=18)
-        self.checkbox.setChecked(self.app.enabled)
-        self.checkbox.toggled.connect(self._on_toggle)
-        self.checkbox.setToolTip("Enable or disable this application")
-        layout.addWidget(self.checkbox)
-
-        # 2. App Icon
-        self.icon_label = QLabel()
-        self.icon_label.setFixedSize(28, 28)
-        icon = resolve_icon(self.app.icon, self.app.desktop_file)
-        self.icon_label.setPixmap(icon.pixmap(QSize(28, 28)))
-        self.icon_label.setScaledContents(True)
-        layout.addWidget(self.icon_label)
-
-        # 3. Name, Badges, and Subtitle
-        text_layout = QVBoxLayout()
-        text_layout.setSpacing(2)
-
-        name_row = QHBoxLayout()
-        name_row.setSpacing(6)
-
-        self.name_label = QLabel(self.app.name)
-        bold_font = QFont()
-        bold_font.setBold(True)
-        bold_font.setPointSize(10)
-        self.name_label.setFont(bold_font)
-        name_row.addWidget(self.name_label)
-
-        if self.app.delay_seconds > 0:
-            delay_badge = QLabel(f"+{self.app.delay_seconds}s")
-            delay_badge.setStyleSheet(
-                "background-color: #2d382e; color: #8ec07c; border: 1px solid #4a634e; "
-                "border-radius: 3px; padding: 1px 5px; font-size: 9px;"
-            )
-            name_row.addWidget(delay_badge)
-
-        if self.app.start_minimized:
-            min_badge = QLabel("Minimized")
-            min_badge.setStyleSheet(
-                "background-color: #2b3040; color: #83a598; border: 1px solid #455070; "
-                "border-radius: 3px; padding: 1px 5px; font-size: 9px;"
-            )
-            name_row.addWidget(min_badge)
-
-        name_row.addStretch()
-        text_layout.addLayout(name_row)
-
-        subtitle_text = self.app.desktop_file or self.app.command
-        self.subtitle_label = QLabel(subtitle_text)
-        self.subtitle_label.setStyleSheet("color: #7f8c8d; font-size: 10px;")
-        text_layout.addWidget(self.subtitle_label)
-
-        layout.addLayout(text_layout, stretch=1)
-
-        # 4. Action Buttons
-        btn_action_style = "QPushButton { padding: 2px 4px; font-size: 11px; }"
-
-        self.up_btn = QPushButton("▲")
-        self.up_btn.setFixedSize(26, 26)
-        self.up_btn.setStyleSheet(btn_action_style)
-        self.up_btn.setToolTip("Move up")
-        self.up_btn.clicked.connect(self._on_move_up)
-        layout.addWidget(self.up_btn)
-
-        self.down_btn = QPushButton("▼")
-        self.down_btn.setFixedSize(26, 26)
-        self.down_btn.setStyleSheet(btn_action_style)
-        self.down_btn.setToolTip("Move down")
-        self.down_btn.clicked.connect(self._on_move_down)
-        layout.addWidget(self.down_btn)
-
-        self.edit_btn = QPushButton("Edit")
-        self.edit_btn.setFixedSize(46, 26)
-        self.edit_btn.setStyleSheet(btn_action_style)
-        self.edit_btn.clicked.connect(self._on_edit)
-        layout.addWidget(self.edit_btn)
-
-        self.delete_btn = QPushButton("✕")
-        self.delete_btn.setFixedSize(26, 26)
-        self.delete_btn.setStyleSheet("QPushButton { padding: 2px 4px; font-size: 11px; color: #f87171; }")
-        self.delete_btn.clicked.connect(self._on_delete)
-        layout.addWidget(self.delete_btn)
-
-    def _on_toggle(self, checked: bool) -> None:
-        self.app.enabled = checked
-        self.parent_window.on_app_toggled(self.app)
-
-    def _on_move_up(self) -> None:
-        self.parent_window.move_app(self.app, -1)
-
-    def _on_move_down(self) -> None:
-        self.parent_window.move_app(self.app, 1)
-
-    def _on_edit(self) -> None:
-        self.parent_window.edit_app(self.app)
-
-    def _on_delete(self) -> None:
-        self.parent_window.delete_app(self.app)
-
-
 class MainWindow(QMainWindow):
     """Main window for AutoLaunch with portrait, narrow orientation."""
 
@@ -351,7 +235,6 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self._on_timer_tick)
 
         self._init_ui()
-        self.apply_theme_styling()
         self._load_profiles_combo()
         self._refresh_app_list()
 
@@ -359,173 +242,6 @@ class MainWindow(QMainWindow):
             self._start_countdown()
         else:
             self.countdown_card.hide()
-
-    def apply_theme_styling(self) -> None:
-        """Applies theme-specific styling and layout geometry."""
-        is_classic = getattr(self.config_manager, "ui_style", "modern") == "classic"
-        app = QApplication.instance()
-        from ui.theme import get_stylesheet
-        if app:
-            app.setStyleSheet(get_stylesheet(self.config_manager.ui_style))
-
-        if is_classic:
-            self.setMinimumSize(480, 560)
-            self.centralWidget().setStyleSheet("QWidget#CentralWidget { background-color: #232629; }")
-            self.header_frame.setStyleSheet("""
-                QFrame {
-                    background-color: #31363b;
-                    border: 1px solid #4f5b66;
-                    border-radius: 6px;
-                    padding: 2px;
-                }
-            """)
-            self.app_list_widget.setStyleSheet("""
-                QListWidget {
-                    border: 1px solid #31363b;
-                    border-radius: 4px;
-                    background-color: #1b1e20;
-                    padding: 2px;
-                }
-                QListWidget::item {
-                    border-bottom: 1px solid #2a2e32;
-                    background: transparent;
-                }
-            """)
-            self.countdown_card.setStyleSheet("""
-                QFrame {
-                    background-color: #2b3035;
-                    border: 1px solid #3a4147;
-                    border-radius: 6px;
-                }
-            """)
-            self.countdown_status_label.setStyleSheet("color: #3daee9; border: none; background: transparent;")
-            self.add_app_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #31363b;
-                    color: #eff0f1;
-                    border: 1px solid #4f5b66;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    padding: 0 12px;
-                    font-size: 12px;
-                }
-                QPushButton:hover {
-                    background-color: #3a4147;
-                    border-color: #3daee9;
-                    color: #ffffff;
-                }
-            """)
-            self.launch_now_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #2d4536;
-                    color: #8ec07c;
-                    border: 1px solid #3e684c;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    font-size: 12px;
-                    padding: 0 14px;
-                }
-                QPushButton:hover {
-                    background-color: #385744;
-                    color: #ffffff;
-                    border-color: #588765;
-                }
-            """)
-            self.close_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #31363b;
-                    color: #eff0f1;
-                    border: 1px solid #4f5b66;
-                    border-radius: 4px;
-                    font-size: 12px;
-                }
-                QPushButton:hover {
-                    background-color: #3a4147;
-                    color: #ffffff;
-                }
-            """)
-        else:
-            self.setMinimumSize(480, 700)
-            self.centralWidget().setStyleSheet("QWidget#CentralWidget { background-color: #0b0f19; }")
-            self.header_frame.setStyleSheet("""
-                QFrame {
-                    background-color: #111827;
-                    border: 1px solid #1e293b;
-                    border-radius: 10px;
-                    padding: 4px;
-                }
-            """)
-            self.app_list_widget.setStyleSheet("""
-                QListWidget {
-                    border: 1px solid #1e293b;
-                    border-radius: 8px;
-                    background-color: #0b1120;
-                    padding: 2px;
-                }
-                QListWidget::item {
-                    border: none;
-                    background: transparent;
-                    padding: 0px;
-                    margin: 0px;
-                }
-            """)
-            self.countdown_card.setStyleSheet("""
-                QFrame {
-                    background-color: #111827;
-                    border: 1px solid #1e293b;
-                    border-radius: 10px;
-                }
-            """)
-            self.countdown_status_label.setStyleSheet("color: #38bdf8; border: none; background: transparent;")
-            self.add_app_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #1e293b;
-                    color: #38bdf8;
-                    border: 1px solid rgba(56, 189, 248, 0.4);
-                    border-radius: 6px;
-                    font-weight: bold;
-                    padding: 0 12px;
-                    font-size: 12px;
-                }
-                QPushButton:hover {
-                    background-color: rgba(56, 189, 248, 0.15);
-                    border-color: #38bdf8;
-                    color: #ffffff;
-                }
-            """)
-            self.launch_now_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #1e3a34;
-                    color: #6ee7b7;
-                    border: 1px solid #059669;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 12px;
-                    padding: 0 14px;
-                }
-                QPushButton:hover {
-                    background-color: #065f46;
-                    color: #ffffff;
-                    border-color: #10b981;
-                }
-                QPushButton:pressed {
-                    background-color: #064e3b;
-                    border-color: #059669;
-                }
-            """)
-            self.close_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #1e293b;
-                    color: #94a3b8;
-                    border: 1px solid #334155;
-                    border-radius: 6px;
-                    font-size: 12px;
-                }
-                QPushButton:hover {
-                    background-color: #334155;
-                    color: #ffffff;
-                }
-            """)
 
     def _init_ui(self) -> None:
         central_widget = QWidget()
@@ -542,9 +258,9 @@ class MainWindow(QMainWindow):
         main_layout.setSpacing(10)
 
         # Top Header Bar (Draggable, 2 compact rows, fixed vertical size policy)
-        self.header_frame = DraggableHeader()
-        self.header_frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        self.header_frame.setStyleSheet("""
+        header_frame = DraggableHeader()
+        header_frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        header_frame.setStyleSheet("""
             QFrame {
                 background-color: #111827;
                 border: 1px solid #1e293b;
@@ -552,7 +268,7 @@ class MainWindow(QMainWindow):
                 padding: 4px;
             }
         """)
-        header_layout = QVBoxLayout(self.header_frame)
+        header_layout = QVBoxLayout(header_frame)
         header_layout.setContentsMargins(10, 8, 10, 8)
         header_layout.setSpacing(8)
 
@@ -654,7 +370,7 @@ class MainWindow(QMainWindow):
         row2.addWidget(self.settings_btn)
 
         header_layout.addLayout(row2)
-        main_layout.addWidget(self.header_frame)
+        main_layout.addWidget(header_frame)
 
         # Center: Application Cards List (Compact)
         self.app_list_widget = QListWidget()
@@ -964,10 +680,6 @@ class MainWindow(QMainWindow):
         self._pause_for_user_action()
         dialog = SettingsDialog(self.config_manager, self)
         if dialog.exec():
-            # Update visual appearance if changed
-            self.apply_theme_styling()
-            self._refresh_app_list()
-
             # If user checked/configured settings, don't suddenly start a race countdown.
             # Instead cancel active timer so user can review window, or reset countdown in paused state.
             if not self.config_manager.enable_countdown or self.config_manager.countdown_seconds <= 0:
@@ -985,7 +697,6 @@ class MainWindow(QMainWindow):
     def _refresh_app_list(self) -> None:
         self.app_list_widget.clear()
         profile = self.config_manager.get_current_profile()
-        is_classic = getattr(self.config_manager, "ui_style", "modern") == "classic"
 
         if not profile.apps:
             self.app_list_widget.hide()
@@ -996,12 +707,9 @@ class MainWindow(QMainWindow):
 
             for app in profile.apps:
                 item = QListWidgetItem(self.app_list_widget)
-                if is_classic:
-                    row_widget = ClassicAppRowWidget(app, self)
-                else:
-                    row_widget = AppCardWidget(app, self)
-                item.setSizeHint(row_widget.sizeHint())
-                self.app_list_widget.setItemWidget(item, row_widget)
+                card_widget = AppCardWidget(app, self)
+                item.setSizeHint(card_widget.sizeHint())
+                self.app_list_widget.setItemWidget(item, card_widget)
 
     def on_app_toggled(self, app: AppEntry) -> None:
         self.config_manager.save()

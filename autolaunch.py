@@ -21,7 +21,7 @@ from PyQt6.QtWidgets import QApplication
 from config import ConfigManager
 from launcher import AppLauncher
 from ui.main_window import MainWindow
-from ui.theme import get_stylesheet
+from ui.theme import MODERN_DARK_STYLESHEET
 
 
 def apply_dark_theme(app: QApplication) -> None:
@@ -78,7 +78,7 @@ def main() -> None:
             app.setWindowIcon(app_icon)
 
     apply_dark_theme(app)
-    app.setStyleSheet(get_stylesheet(config_manager.ui_style))
+    app.setStyleSheet(MODERN_DARK_STYLESHEET)
 
     window = MainWindow(config_manager, autostart_mode=args.autostart)
     window.show()

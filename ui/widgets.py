@@ -9,7 +9,7 @@ from typing import Optional
 from PyQt6.QtCore import (
     QEasingCurve, QPropertyAnimation, QPoint, QRect, QRectF, QSize, Qt, pyqtProperty, pyqtSignal
 )
-from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPaintEvent, QPen
+from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPaintEvent
 from PyQt6.QtWidgets import QAbstractButton, QLabel, QWidget, QLayout, QLayoutItem
 
 
@@ -113,46 +113,6 @@ class BadgePill(QLabel):
                 padding: 2px 8px;
             }}
         """)
-
-
-class CheckMarkBox(QAbstractButton):
-    """Clean desktop checkbox with an explicit vector checkmark when checked."""
-
-    def __init__(self, parent: Optional[QWidget] = None, size: int = 18):
-        super().__init__(parent)
-        self.setCheckable(True)
-        self.setFixedSize(size, size)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-
-    def paintEvent(self, event: QPaintEvent) -> None:
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-        w = self.width()
-        h = self.height()
-        r = QRectF(1.0, 1.0, w - 2.0, h - 2.0)
-
-        if self.isChecked():
-            # Checked: Breeze blue accent with crisp white checkmark
-            p.setBrush(QBrush(QColor("#3daee9")))
-            p.setPen(QPen(QColor("#3daee9"), 1.0))
-            p.drawRoundedRect(r, 3.0, 3.0)
-
-            pen = QPen(QColor("#ffffff"), 2.0)
-            pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-            pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-            p.setPen(pen)
-
-            # Checkmark polyline
-            p.drawLine(int(w * 0.25), int(h * 0.52), int(w * 0.44), int(h * 0.72))
-            p.drawLine(int(w * 0.44), int(h * 0.72), int(w * 0.75), int(h * 0.28))
-        else:
-            # Unchecked: Dark inset with border
-            p.setBrush(QBrush(QColor("#1b1e20")))
-            p.setPen(QPen(QColor("#4f5b66"), 1.5))
-            p.drawRoundedRect(r, 3.0, 3.0)
-
-        p.end()
 
 
 class StepperSpinBox(QWidget):

@@ -92,22 +92,6 @@ class TestConfigManager(unittest.TestCase):
         saved_app = mgr3.get_current_profile().apps[0]
         self.assertTrue(saved_app.start_minimized)
 
-    def test_ui_style_persistence(self):
-        mgr = ConfigManager(self.config_dir)
-        self.assertEqual(mgr.ui_style, "modern")
-
-        mgr.ui_style = "classic"
-        mgr.save()
-
-        mgr2 = ConfigManager(self.config_dir)
-        self.assertEqual(mgr2.ui_style, "classic")
-
-        # Fallback for invalid value
-        mgr2.ui_style = "unknown"
-        mgr2.save()
-        mgr3 = ConfigManager(self.config_dir)
-        self.assertEqual(mgr3.ui_style, "modern")
-
 
 if __name__ == "__main__":
     unittest.main()

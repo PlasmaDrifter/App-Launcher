@@ -55,10 +55,14 @@ class SettingsDialog(FramelessDialogBase):
         duration_lbl.setStyleSheet("color: #94a3b8; font-size: 12px;")
         duration_layout.addWidget(duration_lbl)
 
-        self.countdown_spin = QSpinBox()
-        self.countdown_spin.setRange(1, 120)
-        self.countdown_spin.setValue(self.config_manager.countdown_seconds)
-        self.countdown_spin.setSuffix(" seconds")
+        from ui.widgets import StepperSpinBox
+        self.countdown_spin = StepperSpinBox(
+            minimum=1,
+            maximum=120,
+            value=self.config_manager.countdown_seconds,
+            suffix=" seconds",
+            step=1
+        )
         self.countdown_spin.setEnabled(self.config_manager.enable_countdown)
         duration_layout.addWidget(self.countdown_spin)
         duration_layout.addStretch()

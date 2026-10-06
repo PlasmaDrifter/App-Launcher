@@ -19,6 +19,7 @@ from config import AppEntry
 from desktop_scanner import DesktopAppInfo, DesktopScanner
 from ui.frameless import FramelessDialogBase
 from ui.icon_utils import resolve_icon
+from ui.widgets import StepperSpinBox
 
 
 class AppDialog(FramelessDialogBase):
@@ -70,9 +71,7 @@ class AppDialog(FramelessDialogBase):
 
         self.inst_name_input = QLineEdit()
         self.inst_cmd_input = QLineEdit()
-        self.inst_delay_spin = QSpinBox()
-        self.inst_delay_spin.setRange(0, 300)
-        self.inst_delay_spin.setSuffix(" seconds")
+        self.inst_delay_spin = StepperSpinBox(minimum=0, maximum=300, value=0, suffix=" seconds", step=1)
         self.inst_enabled_check = QCheckBox("Enabled for launch")
         self.inst_enabled_check.setChecked(True)
         self.inst_minimized_check = QCheckBox("Start minimized")
@@ -106,9 +105,7 @@ class AppDialog(FramelessDialogBase):
         icon_row.addWidget(self.custom_icon_input)
         icon_row.addWidget(browse_icon_btn)
 
-        self.custom_delay_spin = QSpinBox()
-        self.custom_delay_spin.setRange(0, 300)
-        self.custom_delay_spin.setSuffix(" seconds")
+        self.custom_delay_spin = StepperSpinBox(minimum=0, maximum=300, value=0, suffix=" seconds", step=1)
 
         self.custom_enabled_check = QCheckBox("Enabled for launch")
         self.custom_enabled_check.setChecked(True)

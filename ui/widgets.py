@@ -113,3 +113,165 @@ class BadgePill(QLabel):
                 padding: 2px 8px;
             }}
         """)
+
+
+class StepperSpinBox(QWidget):
+    """SpinBox with prominent +/- stepper buttons and read-only value display."""
+
+    valueChanged = pyqtSignal(int)
+
+    def __init__(
+        self,
+        minimum: int = 0,
+        maximum: int = 300,
+        value: int = 0,
+        suffix: str = " seconds",
+        step: int = 1,
+        parent: Optional[QWidget] = None,
+    ):
+        super().__init__(parent)
+        self._minimum = minimum
+        self._maximum = maximum
+        self._value = max(minimum, min(value, maximum))
+        self._suffix = suffix
+        self._step = step
+
+        from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QLabel
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
+
+        stepper_btn_style = """
+            QPushButton {
+                background-color: #1e293b;
+                color: #f1f5f9;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                font-size: 15px;
+                font-weight: bold;
+                padding: 0px;
+                min-width: 32px;
+                max-width: 32px;
+                min-height: 32px;
+                max-height: 32px;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                border-color: #38bdf8;
+                color: #38bdf8;
+            }
+            QPushButton:pressed {
+                background-color: #0f172a;
+            }
+            QPushButton:disabled {
+                background-color: #111827;
+                color: #475569;
+                border-color: #1f2937;
+            }
+        """
+
+        self.minus_btn = QPushButton("−")
+        self.minus_btn.setStyleSheet(stepper_btn_style)
+        self.minus_btn.clicked.connect(self._decrement)
+
+        self.display_label = QLabel()
+        self.display_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.display_label.setStyleSheet("""
+            QLabel {
+                background-color: #111827;
+                color: #f8fafc;
+                border: 1px solid #28354f;
+                border-radius: 6px;
+                padding: 5px 14px;
+                font-weight: 600;
+                font-size: 13px;
+                min-width: 90px;
+                min-height: 20px;
+            }
+        """)
+
+        self.plus_btn = QPushButton("+")
+        self.plus_btn.setStyleSheet(stepper_btn_style)
+        self.plus_btn.clicked.connect(self._increment)
+
+        layout.addWidget(self.minus_btn)
+        layout.addWidget(self.display_label)
+        layout.addWidget(self.plus_btn)
+        layout.addStretch()
+
+        self._update_display()
+
+    def _decrement(self) -> None:
+        self.setValue(self._value - self._step)
+
+    def _increment(self) -> None:
+        self.setValue(self._value + self._step)
+
+    def _update_display(self) -> None:
+        self.display_label.setText(f"{self._value}{self._suffix}")
+        self.minus_btn.setEnabled(self._value > self._minimum and self.isEnabled())
+        self.plus_btn.setEnabled(self._value < self._maximum and self.isEnabled())
+
+    def value(self) -> int:
+        return self._value
+
+    def setValue(self, val: int) -> None:
+        clamped = max(self._minimum, min(val, self._maximum))
+        if clamped != self._value:
+            self._value = clamped
+            self._update_display()
+            self.valueChanged.emit(self._value)
+
+    def setMinimum(self, val: int) -> None:
+        self._minimum = val
+        self.setValue(self._value)
+
+    def setMaximum(self, val: int) -> None:
+        self._maximum = val
+        self.setValue(self._value)
+
+    def setRange(self, minimum: int, maximum: int) -> None:
+        self._minimum = minimum
+        self._maximum = maximum
+        self.setValue(self._value)
+
+    def setSuffix(self, suffix: str) -> None:
+        self._suffix = suffix
+        self._update_display()
+
+    def setEnabled(self, enabled: bool) -> None:
+        super().setEnabled(enabled)
+        self.display_label.setEnabled(enabled)
+        if not enabled:
+            self.minus_btn.setEnabled(False)
+            self.plus_btn.setEnabled(False)
+            self.display_label.setStyleSheet("""
+                QLabel {
+                    background-color: #0f172a;
+                    color: #475569;
+                    border: 1px solid #1e293b;
+                    border-radius: 6px;
+                    padding: 5px 14px;
+                    font-weight: 600;
+                    font-size: 13px;
+                    min-width: 90px;
+                    min-height: 20px;
+                }
+            """)
+        else:
+            self.display_label.setStyleSheet("""
+                QLabel {
+                    background-color: #111827;
+                    color: #f8fafc;
+                    border: 1px solid #28354f;
+                    border-radius: 6px;
+                    padding: 5px 14px;
+                    font-weight: 600;
+                    font-size: 13px;
+                    min-width: 90px;
+                    min-height: 20px;
+                }
+            """)
+            self._update_display()
+

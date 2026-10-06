@@ -257,8 +257,9 @@ class MainWindow(QMainWindow):
         main_layout.setContentsMargins(14, 12, 14, 14)
         main_layout.setSpacing(10)
 
-        # Top Header Bar (Draggable, 2 compact rows)
+        # Top Header Bar (Draggable, 2 compact rows, fixed vertical size policy)
         header_frame = DraggableHeader()
+        header_frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         header_frame.setStyleSheet("""
             QFrame {
                 background-color: #111827;
@@ -437,10 +438,12 @@ class MainWindow(QMainWindow):
         empty_layout.addWidget(empty_desc)
         empty_layout.addWidget(add_first_btn)
 
-        main_layout.addWidget(self.empty_card)
+        self.empty_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        main_layout.addWidget(self.empty_card, stretch=1)
 
-        # Countdown Progress Card (Compact)
+        # Countdown Progress Card (Compact, fixed vertical size policy)
         self.countdown_card = QFrame()
+        self.countdown_card.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.countdown_card.setStyleSheet("""
             QFrame {
                 background-color: #111827;

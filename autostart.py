@@ -60,8 +60,11 @@ class AutostartManager:
     @staticmethod
     def generate_desktop_content(autostart: bool = False) -> str:
         """Generates desktop file content without any hardcoded usernames."""
+        import sys
+        script_path = Path(__file__).resolve().parent / "autolaunch.py"
+        py_bin = sys.executable or "/usr/bin/python3"
         flag = " --autostart" if autostart else ""
-        exec_line = f"Exec=autolaunch{flag}"
+        exec_line = f"Exec={py_bin} {script_path}{flag}"
         icon_path = 'Icon=autolaunch'
 
         return f"""[Desktop Entry]

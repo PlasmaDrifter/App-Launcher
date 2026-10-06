@@ -294,7 +294,7 @@ class MainWindow(QMainWindow):
         row1.addStretch()
 
         self.window_controls = WindowControls(self, show_minimize=True)
-        row1.addWidget(self.window_controls)
+        row1.addWidget(self.window_controls, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
         header_layout.addLayout(row1)
 
         # Row 2: Profile Selector & Quick Actions

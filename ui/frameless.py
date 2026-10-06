@@ -89,36 +89,23 @@ class WindowButton(QPushButton):
             painter.drawLine(int(cx - arm), int(cy + 1), int(cx + arm), int(cy + 1))
 
 
-class WindowControls(QFrame):
-    """Custom minimize and close window controls pill with polished glassmorphism aesthetics."""
+class WindowControls(QWidget):
+    """Clean minimize and close window buttons in the upper right without bounding box."""
 
     def __init__(self, parent_window: QWidget, show_minimize: bool = True):
         super().__init__()
         self.parent_window = parent_window
-        self.setObjectName("WindowControlsBox")
-        self.setStyleSheet("""
-            QFrame#WindowControlsBox {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1a2333, stop:1 #111827);
-                border: 1px solid #28374f;
-                border-radius: 8px;
-            }
-        """)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(3, 3, 3, 3)
-        layout.setSpacing(3)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
         if show_minimize:
             self.min_btn = WindowButton("minimize")
             self.min_btn.setToolTip("Minimize")
             self.min_btn.clicked.connect(self.parent_window.showMinimized)
             layout.addWidget(self.min_btn)
-
-            # Elegant micro-divider between minimize and close
-            sep = QFrame()
-            sep.setFixedSize(1, 14)
-            sep.setStyleSheet("background-color: #243247; border: none;")
-            layout.addWidget(sep)
 
         self.close_btn = WindowButton("close")
         self.close_btn.setToolTip("Close")

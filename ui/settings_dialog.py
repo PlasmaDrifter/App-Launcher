@@ -50,6 +50,20 @@ class SettingsDialog(FramelessDialogBase):
         countdown_desc.setStyleSheet("color: #64748b; font-size: 11px; margin-left: 20px;")
         countdown_vbox.addWidget(countdown_desc)
 
+        self.countdown_autostart_only_check = QCheckBox("Only activate countdown on desktop login / boot")
+        self.countdown_autostart_only_check.setChecked(self.config_manager.countdown_autostart_only)
+        self.countdown_autostart_only_check.setEnabled(self.config_manager.enable_countdown)
+        countdown_vbox.addWidget(self.countdown_autostart_only_check)
+
+        autostart_only_desc = QLabel(
+            "When checked, the countdown timer only runs when started automatically on desktop login. "
+            "Opening AutoLaunch from the application menu opens in configuration mode without a timer, "
+            "so you can make changes at your own pace."
+        )
+        autostart_only_desc.setWordWrap(True)
+        autostart_only_desc.setStyleSheet("color: #64748b; font-size: 11px; margin-left: 20px;")
+        countdown_vbox.addWidget(autostart_only_desc)
+
         duration_layout = QHBoxLayout()
         duration_layout.setContentsMargins(20, 0, 0, 0)
         duration_lbl = QLabel("Timer duration:")
@@ -141,6 +155,7 @@ class SettingsDialog(FramelessDialogBase):
 
     def _on_countdown_toggled(self, checked: bool) -> None:
         self.countdown_spin.setEnabled(checked)
+        self.countdown_autostart_only_check.setEnabled(checked)
 
     def _install_desktop_entry(self) -> None:
         success = AutostartManager.install_desktop_entry()
@@ -155,6 +170,7 @@ class SettingsDialog(FramelessDialogBase):
 
     def _on_save(self) -> None:
         self.config_manager.enable_countdown = self.enable_countdown_check.isChecked()
+        self.config_manager.countdown_autostart_only = self.countdown_autostart_only_check.isChecked()
         self.config_manager.countdown_seconds = self.countdown_spin.value()
         self.config_manager.launch_minimized = self.launch_minimized_check.isChecked()
         self.config_manager.autostart_enabled = self.autostart_check.isChecked()

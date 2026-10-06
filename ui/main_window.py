@@ -238,7 +238,12 @@ class MainWindow(QMainWindow):
         self._load_profiles_combo()
         self._refresh_app_list()
 
-        if self.config_manager.enable_countdown and self.config_manager.countdown_seconds > 0:
+        should_start_countdown = (
+            self.config_manager.enable_countdown
+            and self.config_manager.countdown_seconds > 0
+            and (not self.config_manager.countdown_autostart_only or self.autostart_mode)
+        )
+        if should_start_countdown:
             self._start_countdown()
         else:
             self.countdown_card.hide()
@@ -686,6 +691,8 @@ class MainWindow(QMainWindow):
             # If user checked/configured settings, don't suddenly start a race countdown.
             # Instead cancel active timer so user can review window, or reset countdown in paused state.
             if not self.config_manager.enable_countdown or self.config_manager.countdown_seconds <= 0:
+                self._cancel_countdown()
+            elif self.config_manager.countdown_autostart_only and not self.autostart_mode:
                 self._cancel_countdown()
             else:
                 self.remaining_seconds = self.config_manager.countdown_seconds

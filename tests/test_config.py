@@ -22,6 +22,7 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual(mgr.active_profile, "Default")
         self.assertEqual(mgr.countdown_seconds, 5)
         self.assertTrue(mgr.enable_countdown)
+        self.assertTrue(mgr.countdown_autostart_only)
         self.assertIn("Default", mgr.profiles)
         self.assertTrue((self.config_dir / "config.json").is_file())
 
@@ -91,6 +92,18 @@ class TestConfigManager(unittest.TestCase):
         mgr3 = ConfigManager(self.config_dir)
         saved_app = mgr3.get_current_profile().apps[0]
         self.assertTrue(saved_app.start_minimized)
+
+    def test_countdown_settings(self):
+        mgr = ConfigManager(self.config_dir)
+        self.assertTrue(mgr.countdown_autostart_only)
+
+        mgr.countdown_autostart_only = False
+        mgr.countdown_seconds = 10
+        mgr.save()
+
+        mgr2 = ConfigManager(self.config_dir)
+        self.assertFalse(mgr2.countdown_autostart_only)
+        self.assertEqual(mgr2.countdown_seconds, 10)
 
 
 if __name__ == "__main__":

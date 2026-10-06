@@ -101,6 +101,7 @@ class ConfigManager:
         self.active_profile: str = self.DEFAULT_PROFILE_NAME
         self.countdown_seconds: int = 5
         self.enable_countdown: bool = True
+        self.countdown_autostart_only: bool = True
         self.launch_minimized: bool = False
         self.autostart_enabled: bool = True
         self.profiles: Dict[str, Profile] = {}
@@ -112,6 +113,7 @@ class ConfigManager:
             "active_profile": self.DEFAULT_PROFILE_NAME,
             "countdown_seconds": 5,
             "enable_countdown": True,
+            "countdown_autostart_only": True,
             "launch_minimized": False,
             "autostart_enabled": True,
             "profiles": {
@@ -139,6 +141,7 @@ class ConfigManager:
         self.active_profile = str(data.get("active_profile", self.DEFAULT_PROFILE_NAME))
         self.countdown_seconds = max(0, int(data.get("countdown_seconds", 5)))
         self.enable_countdown = bool(data.get("enable_countdown", True))
+        self.countdown_autostart_only = bool(data.get("countdown_autostart_only", True))
         self.launch_minimized = bool(data.get("launch_minimized", False))
         self.autostart_enabled = bool(data.get("autostart_enabled", True))
 
@@ -162,6 +165,7 @@ class ConfigManager:
             "active_profile": self.active_profile,
             "countdown_seconds": self.countdown_seconds,
             "enable_countdown": self.enable_countdown,
+            "countdown_autostart_only": self.countdown_autostart_only,
             "launch_minimized": self.launch_minimized,
             "autostart_enabled": self.autostart_enabled,
             "profiles": {

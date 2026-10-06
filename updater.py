@@ -25,7 +25,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
-APP_VERSION = "0.1.5"
+APP_VERSION = "0.1.6"
 GITHUB_REPO = "PlasmaDrifter/AutoLaunch"
 BASE_DIR = str(Path(__file__).resolve().parent)
 

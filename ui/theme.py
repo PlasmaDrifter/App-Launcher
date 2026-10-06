@@ -143,9 +143,8 @@ QComboBox {
     color: #f8fafc;
     border: 1px solid #28354f;
     border-radius: 6px;
-    padding: 6px 12px;
+    padding: 4px 26px 4px 10px;
     font-weight: 500;
-    min-width: 140px;
 }
 
 QComboBox:hover {
@@ -153,8 +152,22 @@ QComboBox:hover {
 }
 
 QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
     border: none;
-    width: 24px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #94a3b8;
+    margin-right: 6px;
+}
+
+QComboBox::down-arrow:hover {
+    border-top-color: #38bdf8;
 }
 
 QComboBox QAbstractItemView {

@@ -299,13 +299,14 @@ class MainWindow(QMainWindow):
 
         # Row 2: Profile Selector & Quick Actions
         row2 = QHBoxLayout()
-        row2.setSpacing(6)
+        row2.setSpacing(8)
 
         prof_lbl = QLabel("Profile:")
         prof_lbl.setStyleSheet("color: #94a3b8; font-size: 11px; font-weight: bold; border: none; background: transparent;")
         row2.addWidget(prof_lbl)
 
         self.profile_combo = QComboBox()
+        self.profile_combo.setFixedHeight(28)
         self.profile_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
         row2.addWidget(self.profile_combo)

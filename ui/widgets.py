@@ -24,24 +24,29 @@ class HelpBadge(QPushButton):
         self._raw_text = info_text
         self._blocked_text = self._wrap_by_pixels(info_text.strip(), max_pixel_width)
         self.setToolTip(self._blocked_text)
+        self.setToolTipDuration(1800)
         self.setFixedSize(18, 18)
         self.setStyleSheet("""
             QPushButton {
-                background-color: #1e293b;
-                color: #e2e8f0;
-                border: 1px solid #384e6c;
+                background-color: #202024;
+                color: #4f78a4;
+                border: 1.5px solid #4f78a4;
                 border-radius: 9px;
                 font-size: 11px;
                 font-weight: bold;
                 padding: 0px;
             }
             QPushButton:hover {
-                background-color: #3b5f8a;
-                color: #ffffff;
-                border-color: #72a5cc;
+                background-color: #28282e;
+                color: #6891bd;
+                border: 1.5px solid #6891bd;
             }
         """)
         self.clicked.connect(self._show_info)
+
+    def leaveEvent(self, event) -> None:
+        QToolTip.hideText()
+        super().leaveEvent(event)
 
     @staticmethod
     def _wrap_by_pixels(text: str, max_px: int) -> str:
@@ -64,7 +69,7 @@ class HelpBadge(QPushButton):
         return "\n".join(lines)
 
     def _show_info(self) -> None:
-        QToolTip.showText(self.mapToGlobal(self.rect().bottomLeft()), self._blocked_text, self)
+        QToolTip.showText(self.mapToGlobal(self.rect().bottomLeft()), self._blocked_text, self, QRect(), 1800)
 
 
 class ElidedLabel(QLabel):
@@ -105,12 +110,20 @@ class ToggleSwitch(QAbstractButton):
 
         # 0.0 = unchecked (left), 1.0 = checked (right)
         self._thumb_position = 1.0 if self.isChecked() else 0.0
+        self._active_color: QColor = QColor(42, 85, 120)
+        self._inactive_color: QColor = QColor(51, 65, 85)
 
         self._animation = QPropertyAnimation(self, b"thumb_position", self)
         self._animation.setDuration(160)
         self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
 
         self.toggled.connect(self._on_toggled)
+
+    def set_track_colors(self, active: QColor, inactive: Optional[QColor] = None) -> None:
+        self._active_color = active
+        if inactive is not None:
+            self._inactive_color = inactive
+        self.update()
 
     @pyqtProperty(float)
     def thumb_position(self) -> float:
@@ -143,12 +156,10 @@ class ToggleSwitch(QAbstractButton):
         h = self.height()
         radius = h / 2.0
 
-        # Background track color: interpolate between inactive and active
-        # Inactive: #334155 (slate-700), Active: #2a5578 (muted dark slate-blue)
         t = self._thumb_position
-        r = int(51 + (42 - 51) * t)
-        g = int(65 + (85 - 65) * t)
-        b = int(85 + (120 - 85) * t)
+        r = int(self._inactive_color.red() + (self._active_color.red() - self._inactive_color.red()) * t)
+        g = int(self._inactive_color.green() + (self._active_color.green() - self._inactive_color.green()) * t)
+        b = int(self._inactive_color.blue() + (self._active_color.blue() - self._inactive_color.blue()) * t)
         track_color = QColor(r, g, b)
 
         # Draw track
@@ -198,9 +209,9 @@ class BadgePill(QLabel):
 
 STEPPER_BTN_STYLE = """
     QPushButton {
-        background-color: #1e293b;
-        color: #f1f5f9;
-        border: 1px solid #334155;
+        background-color: #202024;
+        color: #d4d4d8;
+        border: 1px solid #2f2f37;
         border-radius: 6px;
         font-size: 15px;
         font-weight: bold;
@@ -211,17 +222,17 @@ STEPPER_BTN_STYLE = """
         max-height: 32px;
     }
     QPushButton:hover {
-        background-color: #334155;
-        border-color: #4a6d8c;
-        color: #6297bf;
+        background-color: #28282e;
+        border-color: #475569;
+        color: #d4d4d8;
     }
     QPushButton:pressed {
-        background-color: #0f172a;
+        background-color: #18181b;
     }
     QPushButton:disabled {
-        background-color: #111827;
-        color: #475569;
-        border-color: #1f2937;
+        background-color: #18181b;
+        color: #71717a;
+        border-color: #2f2f37;
     }
 """
 
@@ -256,9 +267,9 @@ STEPPER_BTN_COMPACT_STYLE = """
 
 STEPPER_LABEL_STYLE_ENABLED = """
     QLabel {
-        background-color: #111827;
-        color: #f8fafc;
-        border: 1px solid #28354f;
+        background-color: #18181b;
+        color: #d4d4d8;
+        border: 1px solid #2f2f37;
         border-radius: 6px;
         padding: 5px 14px;
         font-weight: 600;

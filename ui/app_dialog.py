@@ -46,9 +46,9 @@ class TwoColumnAppTableWidget(QTableWidget):
         self.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.setStyleSheet("""
             QTableWidget {
-                border: 1px solid #1e293b;
+                border: 1px solid #2f2f37;
                 border-radius: 8px;
-                background-color: #0d1322;
+                background-color: #18181b;
                 padding: 3px;
                 outline: none;
             }
@@ -57,16 +57,17 @@ class TwoColumnAppTableWidget(QTableWidget):
                 border-radius: 5px;
                 padding: 3px 8px;
                 margin: 1px;
-                color: #e2e8f0;
+                color: #d4d4d8;
                 background: transparent;
             }
             QTableWidget::item:hover {
-                background-color: #17233c;
-                border-color: #28354f;
+                background-color: #28282e;
+                border-color: #2f2f37;
+                color: #ffffff;
             }
             QTableWidget::item:selected {
-                background-color: #1b2f4a;
-                border-color: #37597a;
+                background-color: rgba(226, 232, 240, 0.15);
+                border-color: rgba(226, 232, 240, 0.45);
                 color: #ffffff;
             }
         """)
@@ -143,16 +144,16 @@ class AppDialog(FramelessDialogBase):
         self.search_input.setFixedHeight(34)
         self.search_input.setStyleSheet("""
             QLineEdit {
-                background-color: #111827;
-                color: #f8fafc;
-                border: 1px solid #28354f;
+                background-color: #18181b;
+                color: #ffffff;
+                border: 1px solid #2f2f37;
                 border-radius: 6px;
                 padding: 6px 12px;
                 font-size: 13px;
             }
             QLineEdit:focus {
-                border-color: #4a6d8c;
-                background-color: #141d30;
+                border-color: #e2e8f0;
+                background-color: #202024;
             }
         """)
         search_box.addWidget(self.search_input)
@@ -167,22 +168,23 @@ class AppDialog(FramelessDialogBase):
 
         chip_style = """
             QPushButton {
-                background-color: #1e293b;
-                color: #94a3b8;
-                border: 1px solid #334155;
+                background-color: #202024;
+                color: #71717a;
+                border: 1px solid #2f2f37;
                 border-radius: 13px;
                 padding: 4px 11px;
                 font-size: 11px;
                 font-weight: 500;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #28282e;
                 color: #ffffff;
+                border-color: #475569;
             }
             QPushButton:checked {
-                background-color: rgba(70, 115, 150, 0.2);
-                border-color: #4a6d8c;
-                color: #6297bf;
+                background-color: rgba(226, 232, 240, 0.15);
+                border-color: rgba(226, 232, 240, 0.45);
+                color: #ffffff;
                 font-weight: bold;
             }
         """
@@ -207,15 +209,15 @@ class AppDialog(FramelessDialogBase):
 
         # Summary label
         self.list_summary_label = QLabel("Loading applications...")
-        self.list_summary_label.setStyleSheet("color: #64748b; font-size: 11px;")
+        self.list_summary_label.setStyleSheet("color: #71717a; font-size: 11px;")
         main_layout.addWidget(self.list_summary_label)
 
         # ----------------- BOTTOM AREA: Inspector & Configuration -----------------
         self.inspector_frame = QFrame()
         self.inspector_frame.setStyleSheet("""
             QFrame {
-                background-color: #111827;
-                border: 1px solid #1f2b42;
+                background-color: #1c1c20;
+                border: 1px solid #2f2f37;
                 border-radius: 10px;
             }
         """)
@@ -233,8 +235,8 @@ class AppDialog(FramelessDialogBase):
         self.preview_icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_icon_label.setStyleSheet("""
             QLabel {
-                background-color: #0b0f19;
-                border: 1px solid #1e293b;
+                background-color: #121214;
+                border: 1px solid #2f2f37;
                 border-radius: 8px;
             }
         """)
@@ -244,11 +246,11 @@ class AppDialog(FramelessDialogBase):
         header_text_layout.setSpacing(2)
         self.preview_title_label = QLabel("Select an Application")
         self.preview_title_label.setFont(QFont("Inter, Segoe UI, sans-serif", 12, QFont.Weight.Bold))
-        self.preview_title_label.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
+        self.preview_title_label.setStyleSheet("color: #ffffff; border: none; background: transparent;")
         header_text_layout.addWidget(self.preview_title_label)
 
         self.preview_desc_label = QLabel("Pick from installed applications or create a custom command.")
-        self.preview_desc_label.setStyleSheet("color: #64748b; font-size: 11px; border: none; background: transparent;")
+        self.preview_desc_label.setStyleSheet("color: #71717a; font-size: 11px; border: none; background: transparent;")
         self.preview_desc_label.setWordWrap(True)
         header_text_layout.addWidget(self.preview_desc_label)
 
@@ -256,7 +258,7 @@ class AppDialog(FramelessDialogBase):
 
         # Inline feedback badge (e.g. "Added 'App' (1 added)")
         self.feedback_label = QLabel()
-        self.feedback_label.setStyleSheet("color: #7ab89b; font-size: 11px; font-weight: 600; border: none; background: transparent; padding-right: 4px;")
+        self.feedback_label.setStyleSheet("color: #34d399; font-size: 11px; font-weight: 600; border: none; background: transparent; padding-right: 4px;")
         self.feedback_label.hide()
         header_card.addWidget(self.feedback_label)
 
@@ -265,7 +267,7 @@ class AppDialog(FramelessDialogBase):
         # Divider
         divider = QFrame()
         divider.setFrameShape(QFrame.Shape.HLine)
-        divider.setStyleSheet("background-color: #1e293b; max-height: 1px; border: none;")
+        divider.setStyleSheet("background-color: #2f2f37; max-height: 1px; border: none;")
         inspector_layout.addWidget(divider)
 
         # Row 1: Display Name + Startup Delay (compact) + Checkboxes
@@ -274,28 +276,29 @@ class AppDialog(FramelessDialogBase):
         row1_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         name_lbl = QLabel("Display Name:")
-        name_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
+        name_lbl.setStyleSheet("color: #d4d4d8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Display name")
         self.name_input.setFixedHeight(30)
         self.name_input.setStyleSheet("""
             QLineEdit {
-                background-color: #0b0f19;
-                color: #f8fafc;
-                border: 1px solid #28354f;
+                background-color: #18181b;
+                color: #ffffff;
+                border: 1px solid #2f2f37;
                 border-radius: 6px;
                 padding: 4px 10px;
                 font-size: 12px;
             }
             QLineEdit:focus {
-                border-color: #4a6d8c;
+                border-color: #e2e8f0;
+                background-color: #202024;
             }
         """)
         row1_layout.addWidget(name_lbl)
         row1_layout.addWidget(self.name_input, stretch=3)
 
         delay_lbl = QLabel("Delay:")
-        delay_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
+        delay_lbl.setStyleSheet("color: #d4d4d8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
         self.delay_spin = StepperSpinBox(minimum=0, maximum=300, value=0, suffix="s", step=1, compact=True)
         row1_layout.addWidget(delay_lbl)
         row1_layout.addWidget(self.delay_spin)
@@ -318,21 +321,22 @@ class AppDialog(FramelessDialogBase):
         row2_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         cmd_lbl = QLabel("Command / Exec:")
-        cmd_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
+        cmd_lbl.setStyleSheet("color: #d4d4d8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
         self.cmd_input = QLineEdit()
         self.cmd_input.setPlaceholderText("Command to execute")
         self.cmd_input.setFixedHeight(32)
         self.cmd_input.setStyleSheet("""
             QLineEdit {
-                background-color: #0b0f19;
-                color: #f8fafc;
-                border: 1px solid #28354f;
+                background-color: #18181b;
+                color: #ffffff;
+                border: 1px solid #2f2f37;
                 border-radius: 6px;
                 padding: 4px 10px;
                 font-size: 12px;
             }
             QLineEdit:focus {
-                border-color: #4a6d8c;
+                border-color: #e2e8f0;
+                background-color: #202024;
             }
         """)
         row2_layout.addWidget(cmd_lbl)
@@ -346,26 +350,42 @@ class AppDialog(FramelessDialogBase):
         icon_row_layout.setContentsMargins(0, 0, 0, 0)
         icon_row_layout.setSpacing(10)
         icon_lbl = QLabel("Custom Icon:")
-        icon_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
+        icon_lbl.setStyleSheet("color: #d4d4d8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
         self.custom_icon_input = QLineEdit()
         self.custom_icon_input.setPlaceholderText("Icon name or image path (.png, .svg)")
         self.custom_icon_input.setFixedHeight(30)
         self.custom_icon_input.setStyleSheet("""
             QLineEdit {
-                background-color: #0b0f19;
-                color: #f8fafc;
-                border: 1px solid #28354f;
+                background-color: #18181b;
+                color: #ffffff;
+                border: 1px solid #2f2f37;
                 border-radius: 6px;
                 padding: 4px 10px;
                 font-size: 12px;
             }
             QLineEdit:focus {
-                border-color: #4a6d8c;
+                border-color: #e2e8f0;
+                background-color: #202024;
             }
         """)
         self.custom_icon_input.textChanged.connect(self._on_custom_icon_text_changed)
         browse_icon_btn = QPushButton("Browse...")
         browse_icon_btn.setFixedHeight(30)
+        browse_icon_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #202024;
+                color: #d4d4d8;
+                border: 1px solid #2f2f37;
+                border-radius: 6px;
+                padding: 0 10px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #28282e;
+                color: #ffffff;
+                border-color: #475569;
+            }
+        """)
         browse_icon_btn.clicked.connect(self._browse_custom_icon)
         icon_row_layout.addWidget(icon_lbl)
         icon_row_layout.addWidget(self.custom_icon_input, stretch=1)
@@ -387,16 +407,16 @@ class AppDialog(FramelessDialogBase):
             self.save_btn.clicked.connect(self._on_save_and_close)
             self.save_btn.setStyleSheet("""
                 QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
-                    color: #f8fafc;
+                    background-color: #202024;
+                    color: #ffffff;
                     font-weight: bold;
                     font-size: 13px;
-                    border: 1px solid #376388;
+                    border: 1px solid rgba(226, 232, 240, 0.45);
                     border-radius: 6px;
                 }
                 QPushButton:hover {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
-                    border-color: #4578a3;
+                    background-color: rgba(226, 232, 240, 0.15);
+                    border-color: #ffffff;
                     color: #ffffff;
                 }
             """)
@@ -407,14 +427,14 @@ class AppDialog(FramelessDialogBase):
             self.cancel_btn.setMinimumWidth(100)
             self.cancel_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #1e293b;
-                    color: #94a3b8;
-                    border: 1px solid #334155;
+                    background-color: #202024;
+                    color: #71717a;
+                    border: 1px solid #2f2f37;
                     border-radius: 6px;
                     font-size: 13px;
                 }
                 QPushButton:hover {
-                    background-color: #334155;
+                    background-color: #28282e;
                     color: #ffffff;
                 }
             """)
@@ -427,18 +447,18 @@ class AppDialog(FramelessDialogBase):
             self.add_btn.clicked.connect(self._on_add_clicked)
             self.add_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #1e293b;
-                    color: #6297bf;
-                    border: 1px solid rgba(98, 151, 191, 0.4);
+                    background-color: #202024;
+                    color: #e2e8f0;
+                    border: 1px solid rgba(226, 232, 240, 0.45);
                     border-radius: 6px;
                     font-weight: bold;
                     padding: 0 12px;
                     font-size: 13px;
                 }
                 QPushButton:hover {
-                    background-color: rgba(70, 115, 150, 0.15);
-                    border-color: #6297bf;
-                    color: #cbd5e1;
+                    background-color: rgba(226, 232, 240, 0.15);
+                    border-color: #ffffff;
+                    color: #ffffff;
                 }
             """)
             btn_layout.addWidget(self.add_btn, stretch=1)
@@ -448,15 +468,15 @@ class AppDialog(FramelessDialogBase):
             self.close_btn.setMinimumWidth(100)
             self.close_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #1e293b;
-                    color: #94a3b8;
-                    border: 1px solid #334155;
+                    background-color: #202024;
+                    color: #71717a;
+                    border: 1px solid #2f2f37;
                     border-radius: 6px;
                     font-size: 13px;
                 }
                 QPushButton:hover {
-                    background-color: #334155;
-                    color: #cbd5e1;
+                    background-color: #28282e;
+                    color: #ffffff;
                 }
             """)
             self.close_btn.clicked.connect(self._on_close_clicked)

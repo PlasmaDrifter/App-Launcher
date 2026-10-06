@@ -344,7 +344,7 @@ class FramelessDialogBase(QDialog):
         self.setWindowTitle(title or "AutoLaunch Dialog")
         self.setWindowRole("dialog")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
-        self.setStyleSheet("background-color: #0d121f;")
+        self.setStyleSheet("background-color: #121214;")
 
         self.resize_handler = FramelessResizeHandler(self)
 
@@ -356,8 +356,8 @@ class FramelessDialogBase(QDialog):
         self.dialog_header = DraggableHeader()
         self.dialog_header.setStyleSheet("""
             QFrame {
-                background-color: #111827;
-                border: 1px solid #1e293b;
+                background-color: #1c1c20;
+                border: 1px solid #2f2f37;
                 border-radius: 10px;
                 padding: 4px;
             }
@@ -368,7 +368,7 @@ class FramelessDialogBase(QDialog):
         self.title_label = QLabel(title)
         title_font = QFont("Inter, Segoe UI, sans-serif", 13, QFont.Weight.Bold)
         self.title_label.setFont(title_font)
-        self.title_label.setStyleSheet("color: #f1f5f9; background: transparent; border: none;")
+        self.title_label.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         header_layout.addWidget(self.title_label)
 
         header_layout.addStretch()

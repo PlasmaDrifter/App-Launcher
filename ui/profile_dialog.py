@@ -21,9 +21,24 @@ class ProfileDialog(FramelessDialogBase):
         main_layout.setSpacing(12)
 
         label = QLabel("Profile Name:")
+        label.setStyleSheet("color: #d4d4d8; font-size: 13px; font-weight: 500; border: none; background: transparent;")
         self.name_input = QLineEdit()
         self.name_input.setText(current_name)
         self.name_input.setPlaceholderText("e.g. Work, Gaming, Daily")
+        self.name_input.setStyleSheet("""
+            QLineEdit {
+                background-color: #18181b;
+                color: #ffffff;
+                border: 1px solid #2f2f37;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            QLineEdit:focus {
+                border-color: #e2e8f0;
+                background-color: #202024;
+            }
+        """)
 
         main_layout.addWidget(label)
         main_layout.addWidget(self.name_input)
@@ -32,6 +47,20 @@ class ProfileDialog(FramelessDialogBase):
         btn_layout.addStretch()
 
         cancel_btn = QPushButton("Cancel")
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #202024;
+                color: #71717a;
+                border: 1px solid #2f2f37;
+                border-radius: 6px;
+                padding: 7px 16px;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #28282e;
+                color: #ffffff;
+            }
+        """)
         cancel_btn.clicked.connect(self.reject)
 
         btn_layout.addWidget(cancel_btn)
@@ -41,16 +70,17 @@ class ProfileDialog(FramelessDialogBase):
         save_btn.clicked.connect(self._on_save)
         save_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
-                color: #e2e8f0;
+                background-color: #202024;
+                color: #ffffff;
                 font-weight: bold;
-                border: 1px solid #376388;
+                border: 1px solid rgba(226, 232, 240, 0.45);
                 border-radius: 6px;
                 padding: 7px 20px;
+                font-size: 13px;
             }
             QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
-                border-color: #4578a3;
+                background-color: rgba(226, 232, 240, 0.15);
+                border-color: #ffffff;
                 color: #ffffff;
             }
         """)

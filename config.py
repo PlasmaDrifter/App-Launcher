@@ -105,6 +105,8 @@ class ConfigManager:
         self.countdown_autostart_only: bool = True
         self.launch_minimized: bool = False
         self.autostart_enabled: bool = True
+        self.dismissed_update_version: Optional[str] = None
+        self.theme: str = "modern_minimalist"
         self.profiles: Dict[str, Profile] = {}
 
         self.load()
@@ -118,6 +120,8 @@ class ConfigManager:
             "countdown_autostart_only": True,
             "launch_minimized": False,
             "autostart_enabled": True,
+            "dismissed_update_version": None,
+            "theme": "modern_minimalist",
             "profiles": {
                 self.DEFAULT_PROFILE_NAME: {
                     "apps": []
@@ -147,6 +151,8 @@ class ConfigManager:
         self.countdown_autostart_only = bool(data.get("countdown_autostart_only", True))
         self.launch_minimized = bool(data.get("launch_minimized", False))
         self.autostart_enabled = bool(data.get("autostart_enabled", True))
+        self.dismissed_update_version = data.get("dismissed_update_version")
+        self.theme = str(data.get("theme", "modern_minimalist"))
 
         profiles_raw = data.get("profiles", {})
         self.profiles = {}
@@ -175,6 +181,8 @@ class ConfigManager:
             "countdown_autostart_only": self.countdown_autostart_only,
             "launch_minimized": self.launch_minimized,
             "autostart_enabled": self.autostart_enabled,
+            "dismissed_update_version": self.dismissed_update_version,
+            "theme": self.theme,
             "profiles": {
                 name: {"apps": [app.to_dict() for app in prof.apps]}
                 for name, prof in self.profiles.items()

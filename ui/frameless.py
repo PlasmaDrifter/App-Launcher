@@ -192,23 +192,9 @@ class FramelessDialogBase(QDialog):
             dlg_width = self.width() if self.width() > 0 else self.sizeHint().width()
             dlg_height = self.height() if self.height() > 0 else self.sizeHint().height()
 
-            # Calculate centered position relative to parent window
+            # Align dialog center with the parent window's center
             x = parent_geo.x() + (parent_geo.width() - dlg_width) // 2
             y = parent_geo.y() + (parent_geo.height() - dlg_height) // 2
-
-            # Identify which display screen the parent window is currently on
-            app = QApplication.instance()
-            screen = None
-            if app:
-                screen = app.screenAt(parent_geo.center())
-            if not screen:
-                screen = parent.screen() or self.screen()
-
-            # Clamp within that screen's available geometry so dialog doesn't overflow
-            if screen:
-                screen_geo = screen.availableGeometry()
-                x = max(screen_geo.left(), min(x, screen_geo.right() - dlg_width))
-                y = max(screen_geo.top(), min(y, screen_geo.bottom() - dlg_height))
 
             self.move(x, y)
         else:

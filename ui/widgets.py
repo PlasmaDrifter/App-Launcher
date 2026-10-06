@@ -23,8 +23,6 @@ class HelpBadge(QPushButton):
         super().__init__("?", parent)
         self._raw_text = info_text
         self._blocked_text = self._wrap_by_pixels(info_text.strip(), max_pixel_width)
-        self.setToolTip(self._blocked_text)
-        self.setToolTipDuration(1800)
         self.setFixedSize(18, 18)
         self.setStyleSheet("""
             QPushButton {
@@ -69,7 +67,9 @@ class HelpBadge(QPushButton):
         return "\n".join(lines)
 
     def _show_info(self) -> None:
-        QToolTip.showText(self.mapToGlobal(self.rect().bottomLeft()), self._blocked_text, self, QRect(), 1800)
+        # Show tooltip without an early auto-dismiss timeout (-1 or large duration).
+        # It stays visible until leaveEvent calls QToolTip.hideText() when the mouse moves away.
+        QToolTip.showText(self.mapToGlobal(self.rect().bottomLeft()), self._blocked_text, self, self.rect(), 300000)
 
 
 class ElidedLabel(QLabel):

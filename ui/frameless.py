@@ -151,6 +151,8 @@ class FramelessDialogBase(QDialog):
 
     def __init__(self, parent: Optional[QWidget] = None, title: str = ""):
         super().__init__(parent)
+        self.setWindowTitle(title or "AutoLaunch Dialog")
+        self.setWindowRole("dialog")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
         self.setStyleSheet("background-color: #0d121f;")
 

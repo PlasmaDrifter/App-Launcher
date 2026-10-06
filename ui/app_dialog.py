@@ -25,6 +25,7 @@ from config import AppEntry
 from desktop_scanner import DesktopAppInfo, DesktopScanner
 from ui.frameless import FramelessDialogBase
 from ui.icon_utils import resolve_icon
+from ui.themes import CHECKMARK_ICON_PATH, build_primary_btn_stylesheet, get_theme
 from ui.widgets import FlowLayout, StepperSpinBox
 
 
@@ -303,14 +304,46 @@ class AppDialog(FramelessDialogBase):
         row1_layout.addWidget(delay_lbl)
         row1_layout.addWidget(self.delay_spin)
 
+        chk_style = f"""
+            QCheckBox {{
+                color: #d4d4d8;
+                font-size: 12px;
+                font-weight: 500;
+                spacing: 7px;
+                background: transparent;
+                border: none;
+            }}
+            QCheckBox::indicator {{
+                width: 18px;
+                height: 18px;
+                border-radius: 4px;
+                border: 2px solid #64748b;
+                background-color: #18181b;
+            }}
+            QCheckBox::indicator:hover {{
+                border: 2px solid #e2e8f0;
+                background-color: #202024;
+            }}
+            QCheckBox::indicator:checked {{
+                border: 2px solid #d4d4d8;
+                background-color: #334155;
+                image: url("{CHECKMARK_ICON_PATH}");
+            }}
+            QCheckBox::indicator:checked:hover {{
+                border: 2px solid #d4d4d8;
+                background-color: #475569;
+                image: url("{CHECKMARK_ICON_PATH}");
+            }}
+        """
+
         self.minimized_check = QCheckBox("Start min")
         self.minimized_check.setChecked(False)
-        self.minimized_check.setStyleSheet("border: none; background: transparent;")
+        self.minimized_check.setStyleSheet(chk_style)
         row1_layout.addWidget(self.minimized_check)
 
         self.enabled_check = QCheckBox("Enabled")
         self.enabled_check.setChecked(True)
-        self.enabled_check.setStyleSheet("border: none; background: transparent;")
+        self.enabled_check.setStyleSheet(chk_style)
         row1_layout.addWidget(self.enabled_check)
 
         inspector_layout.addLayout(row1_layout)
@@ -404,80 +437,53 @@ class AppDialog(FramelessDialogBase):
             self.save_btn = QPushButton("Save Changes")
             self.save_btn.setFixedHeight(36)
             self.save_btn.setDefault(True)
+            theme = get_theme("modern_minimalist")
             self.save_btn.clicked.connect(self._on_save_and_close)
-            self.save_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #202024;
-                    color: #ffffff;
-                    font-weight: bold;
-                    font-size: 13px;
-                    border: 1px solid rgba(226, 232, 240, 0.45);
-                    border-radius: 6px;
-                }
-                QPushButton:hover {
-                    background-color: rgba(226, 232, 240, 0.15);
-                    border-color: #ffffff;
-                    color: #ffffff;
-                }
-            """)
+            self.save_btn.setStyleSheet(build_primary_btn_stylesheet(theme))
             btn_layout.addWidget(self.save_btn, stretch=1)
 
             self.cancel_btn = QPushButton("Cancel")
             self.cancel_btn.setFixedHeight(36)
             self.cancel_btn.setMinimumWidth(100)
-            self.cancel_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #202024;
-                    color: #71717a;
-                    border: 1px solid #2f2f37;
+            self.cancel_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme.bg_card};
+                    color: #d4d4d8;
+                    border: 1px solid {theme.border_subtle};
                     border-radius: 6px;
                     font-size: 13px;
-                }
-                QPushButton:hover {
-                    background-color: #28282e;
-                    color: #ffffff;
-                }
+                }}
+                QPushButton:hover {{
+                    background-color: {theme.card_hover};
+                    color: #d4d4d8;
+                }}
             """)
             self.cancel_btn.clicked.connect(self.reject)
             btn_layout.addWidget(self.cancel_btn, stretch=0)
         else:
+            theme = get_theme("modern_minimalist")
             self.add_btn = QPushButton("+ Add Application to Profile")
             self.add_btn.setFixedHeight(36)
             self.add_btn.setDefault(True)
             self.add_btn.clicked.connect(self._on_add_clicked)
-            self.add_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #202024;
-                    color: #e2e8f0;
-                    border: 1px solid rgba(226, 232, 240, 0.45);
-                    border-radius: 6px;
-                    font-weight: bold;
-                    padding: 0 12px;
-                    font-size: 13px;
-                }
-                QPushButton:hover {
-                    background-color: rgba(226, 232, 240, 0.15);
-                    border-color: #ffffff;
-                    color: #ffffff;
-                }
-            """)
+            self.add_btn.setStyleSheet(build_primary_btn_stylesheet(theme))
             btn_layout.addWidget(self.add_btn, stretch=1)
 
             self.close_btn = QPushButton("Close")
             self.close_btn.setFixedHeight(36)
             self.close_btn.setMinimumWidth(100)
-            self.close_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #202024;
-                    color: #71717a;
-                    border: 1px solid #2f2f37;
+            self.close_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme.bg_card};
+                    color: #d4d4d8;
+                    border: 1px solid {theme.border_subtle};
                     border-radius: 6px;
                     font-size: 13px;
-                }
-                QPushButton:hover {
-                    background-color: #28282e;
-                    color: #ffffff;
-                }
+                }}
+                QPushButton:hover {{
+                    background-color: {theme.card_hover};
+                    color: #d4d4d8;
+                }}
             """)
             self.close_btn.clicked.connect(self._on_close_clicked)
             btn_layout.addWidget(self.close_btn, stretch=0)

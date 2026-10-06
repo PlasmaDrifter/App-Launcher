@@ -275,26 +275,30 @@ class MainWindow(QMainWindow):
         # Row 1: Brand & Window Controls
         row1 = QHBoxLayout()
         row1.setSpacing(6)
+        row1.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        title_box = QVBoxLayout()
-        title_box.setSpacing(1)
+        title_box = QHBoxLayout()
+        title_box.setSpacing(6)
+        title_box.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         title_lbl = QLabel("AutoLaunch")
-        title_font = QFont("Inter, Segoe UI, sans-serif", 13, QFont.Weight.Bold)
+        title_font = QFont("Inter, Segoe UI, sans-serif", 16, QFont.Weight.Bold)
         title_lbl.setFont(title_font)
         title_lbl.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
 
-        sub_lbl = QLabel("Startup Application Orchestrator")
-        sub_lbl.setStyleSheet("color: #64748b; font-size: 10px; border: none; background: transparent;")
+        version_lbl = QLabel("v0.1.0")
+        version_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Normal)
+        version_lbl.setFont(version_font)
+        version_lbl.setStyleSheet("color: #64748b; border: none; background: transparent; padding-top: 4px;")
 
         title_box.addWidget(title_lbl)
-        title_box.addWidget(sub_lbl)
+        title_box.addWidget(version_lbl)
         row1.addLayout(title_box)
 
         row1.addStretch()
 
         self.window_controls = WindowControls(self, show_minimize=True)
-        row1.addWidget(self.window_controls, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
+        row1.addWidget(self.window_controls, alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight)
         header_layout.addLayout(row1)
 
         # Row 2: Profile Selector & Quick Actions

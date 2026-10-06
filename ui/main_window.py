@@ -494,15 +494,12 @@ class MainWindow(QMainWindow):
 
         main_layout.addWidget(self.countdown_card)
 
-        # Bottom Action Bar (Streamlined for portrait layout)
-        bottom_layout = QVBoxLayout()
+        # Bottom Action Bar (Same row for Add Application and Launch Selected)
+        bottom_layout = QHBoxLayout()
         bottom_layout.setSpacing(8)
 
-        row_buttons = QHBoxLayout()
-        row_buttons.setSpacing(8)
-
         self.add_app_btn = QPushButton("+ Add Application")
-        self.add_app_btn.setFixedHeight(34)
+        self.add_app_btn.setFixedHeight(36)
         self.add_app_btn.setStyleSheet("""
             QPushButton {
                 background-color: #1e293b;
@@ -520,10 +517,35 @@ class MainWindow(QMainWindow):
             }
         """)
         self.add_app_btn.clicked.connect(self._on_add_app)
-        row_buttons.addWidget(self.add_app_btn, stretch=1)
+        bottom_layout.addWidget(self.add_app_btn, stretch=1)
+
+        self.launch_now_btn = QPushButton("Launch Selected")
+        self.launch_now_btn.setFixedHeight(36)
+        self.launch_now_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1e3a34;
+                color: #6ee7b7;
+                border: 1px solid #059669;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 12px;
+                padding: 0 14px;
+            }
+            QPushButton:hover {
+                background-color: #065f46;
+                color: #ffffff;
+                border-color: #10b981;
+            }
+            QPushButton:pressed {
+                background-color: #064e3b;
+                border-color: #059669;
+            }
+        """)
+        self.launch_now_btn.clicked.connect(self.launch_selected_apps)
+        bottom_layout.addWidget(self.launch_now_btn, stretch=1)
 
         self.close_btn = QPushButton("Close")
-        self.close_btn.setFixedSize(70, 34)
+        self.close_btn.setFixedSize(60, 36)
         self.close_btn.setStyleSheet("""
             QPushButton {
                 background-color: #1e293b;
@@ -539,31 +561,7 @@ class MainWindow(QMainWindow):
         """)
         self.close_btn.setToolTip("Close AutoLaunch without launching applications")
         self.close_btn.clicked.connect(self.close)
-        row_buttons.addWidget(self.close_btn)
-
-        bottom_layout.addLayout(row_buttons)
-
-        # Full-width prominent launch button
-        self.launch_now_btn = QPushButton("Launch Selected Now")
-        self.launch_now_btn.setFixedHeight(38)
-        self.launch_now_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #10b981, stop:1 #059669);
-                color: #ffffff;
-                font-weight: bold;
-                border: none;
-                border-radius: 8px;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #34d399, stop:1 #10b981);
-            }
-            QPushButton:pressed {
-                background: #047857;
-            }
-        """)
-        self.launch_now_btn.clicked.connect(self.launch_selected_apps)
-        bottom_layout.addWidget(self.launch_now_btn)
+        bottom_layout.addWidget(self.close_btn)
 
         main_layout.addLayout(bottom_layout)
 

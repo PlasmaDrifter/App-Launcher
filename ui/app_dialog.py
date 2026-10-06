@@ -152,22 +152,26 @@ class AppDialog(FramelessDialogBase):
 
         # Application List
         self.app_list_widget = QListWidget()
-        self.app_list_widget.setIconSize(QSize(36, 36))
-        self.app_list_widget.setSpacing(3)
+        self.app_list_widget.setIconSize(QSize(28, 28))
+        self.app_list_widget.setSpacing(1)
+        self.app_list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.app_list_widget.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.app_list_widget.setStyleSheet("""
             QListWidget {
                 border: 1px solid #1e293b;
                 border-radius: 8px;
                 background-color: #0d1322;
-                padding: 4px;
+                padding: 2px;
                 outline: none;
             }
             QListWidget::item {
                 border: 1px solid transparent;
-                border-radius: 6px;
-                padding: 6px 10px;
+                border-radius: 5px;
+                padding: 3px 8px;
+                margin: 0px;
                 color: #e2e8f0;
                 background: transparent;
+                height: 32px;
             }
             QListWidget::item:hover {
                 background-color: #17233c;
@@ -364,8 +368,22 @@ class AppDialog(FramelessDialogBase):
             item = QListWidgetItem()
             icon = resolve_icon(app.icon_name, app.icon_path)
             item.setIcon(icon)
-            desc = f"  ({app.generic_name})" if app.generic_name else ""
-            item.setText(f"{app.name}{desc}")
+            
+            # Clean display label: keep item text focused on application name, full details in tooltip
+            display_name = app.name.strip()
+            if app.generic_name and app.generic_name.lower() not in display_name.lower():
+                display_text = f"{display_name} ({app.generic_name})"
+            else:
+                display_text = display_name
+            
+            # Truncate text cleanly if exceedingly long
+            if len(display_text) > 34:
+                truncated_text = display_text[:32] + "..."
+            else:
+                truncated_text = display_text
+
+            item.setText(truncated_text)
+            item.setToolTip(f"{app.name}\n{app.generic_name or app.comment or app.clean_command}")
             item.setData(Qt.ItemDataRole.UserRole, app)
             self.app_list_widget.addItem(item)
 

@@ -40,7 +40,7 @@ class AppCardWidget(QFrame):
             QFrame#AppCard {
                 background-color: #131b2e;
                 border: 1px solid #1f2b42;
-                border-radius: 10px;
+                border-radius: 8px;
             }
             QFrame#AppCard:hover {
                 background-color: #17233c;
@@ -49,7 +49,7 @@ class AppCardWidget(QFrame):
         """)
 
         card_layout = QHBoxLayout(self)
-        card_layout.setContentsMargins(8, 6, 8, 6)
+        card_layout.setContentsMargins(8, 4, 8, 4)
         card_layout.setSpacing(8)
 
         # 1. Compact Animated Toggle Switch
@@ -373,18 +373,20 @@ class MainWindow(QMainWindow):
         # Center: Application Cards List (Compact)
         self.app_list_widget = QListWidget()
         self.app_list_widget.setSelectionMode(QListWidget.SelectionMode.NoSelection)
-        self.app_list_widget.setSpacing(4)
+        self.app_list_widget.setSpacing(2)
+        self.app_list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.app_list_widget.setStyleSheet("""
             QListWidget {
                 border: 1px solid #1e293b;
-                border-radius: 10px;
+                border-radius: 8px;
                 background-color: #0b1120;
-                padding: 4px;
+                padding: 2px;
             }
             QListWidget::item {
                 border: none;
                 background: transparent;
                 padding: 0px;
+                margin: 0px;
             }
         """)
         main_layout.addWidget(self.app_list_widget, stretch=1)

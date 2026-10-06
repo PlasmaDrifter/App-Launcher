@@ -39,6 +39,15 @@ class TestAppLauncher(unittest.TestCase):
         args, use_shell = AppLauncher.get_launch_command(app)
         self.assertIn("exec python3 my_script.py", args[2])
 
+    def test_target_window_classes(self):
+        app = AppEntry(
+            name="Zen YouTube",
+            command="zen-youtube --class zen-youtube",
+            desktop_file="zen-youtube.desktop",
+        )
+        classes = AppLauncher.get_target_window_classes(app)
+        self.assertIn("zen-youtube", classes)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -88,6 +88,25 @@ class SettingsDialog(FramelessDialogBase):
 
         main_layout.addWidget(autostart_group)
 
+        # Application Window Behavior Group
+        behavior_group = QGroupBox("Application Window Behavior")
+        behavior_layout = QVBoxLayout(behavior_group)
+        behavior_layout.setSpacing(10)
+
+        self.launch_minimized_check = QCheckBox("Launch all applications minimized")
+        self.launch_minimized_check.setChecked(self.config_manager.launch_minimized)
+        behavior_layout.addWidget(self.launch_minimized_check)
+
+        behavior_desc = QLabel(
+            "When checked, all launched applications will be minimized to the taskbar upon opening. "
+            "You can also configure this individually per application."
+        )
+        behavior_desc.setWordWrap(True)
+        behavior_desc.setStyleSheet("color: #64748b; font-size: 11px; margin-left: 20px;")
+        behavior_layout.addWidget(behavior_desc)
+
+        main_layout.addWidget(behavior_group)
+
         # Action Buttons
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
@@ -133,6 +152,7 @@ class SettingsDialog(FramelessDialogBase):
     def _on_save(self) -> None:
         self.config_manager.enable_countdown = self.enable_countdown_check.isChecked()
         self.config_manager.countdown_seconds = self.countdown_spin.value()
+        self.config_manager.launch_minimized = self.launch_minimized_check.isChecked()
         self.config_manager.autostart_enabled = self.autostart_check.isChecked()
 
         # Update system autostart desktop file

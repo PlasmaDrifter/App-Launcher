@@ -104,6 +104,16 @@ class AppCardWidget(QFrame):
             )
             title_row.addWidget(delay_badge)
 
+        # Minimized badge if configured
+        if self.app.start_minimized:
+            min_badge = BadgePill(
+                "Minimized",
+                bg_color="rgba(99, 102, 241, 0.15)",
+                text_color="#818cf8",
+                border_color="rgba(99, 102, 241, 0.35)"
+            )
+            title_row.addWidget(min_badge)
+
         title_row.addStretch()
         details_layout.addLayout(title_row)
 
@@ -764,7 +774,7 @@ class MainWindow(QMainWindow):
         enabled_apps = [a for a in profile.apps if a.enabled]
 
         if enabled_apps:
-            AppLauncher.launch_many(enabled_apps)
+            AppLauncher.launch_many(enabled_apps, global_launch_minimized=self.config_manager.launch_minimized)
 
         self.close()
         QApplication.quit()

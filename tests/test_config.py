@@ -70,6 +70,28 @@ class TestConfigManager(unittest.TestCase):
         self.assertTrue(mgr2.remove_app_from_profile("Default", app.id))
         self.assertEqual(len(mgr2.get_current_profile().apps), 0)
 
+    def test_minimization_settings(self):
+        mgr = ConfigManager(self.config_dir)
+        self.assertFalse(mgr.launch_minimized)
+
+        # Global toggle
+        mgr.launch_minimized = True
+        mgr.save()
+
+        mgr2 = ConfigManager(self.config_dir)
+        self.assertTrue(mgr2.launch_minimized)
+
+        # Per-app toggle
+        app = AppEntry(
+            name="Minimized App",
+            command="true",
+            start_minimized=True,
+        )
+        self.assertTrue(mgr2.add_app_to_profile("Default", app))
+        mgr3 = ConfigManager(self.config_dir)
+        saved_app = mgr3.get_current_profile().apps[0]
+        self.assertTrue(saved_app.start_minimized)
+
 
 if __name__ == "__main__":
     unittest.main()

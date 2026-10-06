@@ -56,7 +56,7 @@ def main() -> None:
     if args.headless:
         profile = config_manager.get_current_profile()
         enabled = [a for a in profile.apps if a.enabled]
-        AppLauncher.launch_many(enabled)
+        AppLauncher.launch_many(enabled, global_launch_minimized=config_manager.launch_minimized)
         sys.exit(0)
 
     # Disable countdown if --config flag is explicitly passed

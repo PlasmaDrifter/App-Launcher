@@ -23,6 +23,7 @@ class AppEntry:
     icon: str = ""
     enabled: bool = True
     delay_seconds: int = 0
+    start_minimized: bool = False
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "AppEntry":
@@ -34,6 +35,7 @@ class AppEntry:
             icon=str(data.get("icon", "")),
             enabled=bool(data.get("enabled", True)),
             delay_seconds=int(data.get("delay_seconds", 0)),
+            start_minimized=bool(data.get("start_minimized", False)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -53,6 +55,7 @@ class AppEntry:
             "icon": _collapse(self.icon),
             "enabled": self.enabled,
             "delay_seconds": self.delay_seconds,
+            "start_minimized": self.start_minimized,
         }
 
 
@@ -95,6 +98,7 @@ class ConfigManager:
         self.active_profile: str = self.DEFAULT_PROFILE_NAME
         self.countdown_seconds: int = 5
         self.enable_countdown: bool = True
+        self.launch_minimized: bool = False
         self.autostart_enabled: bool = True
         self.profiles: Dict[str, Profile] = {}
 
@@ -105,6 +109,7 @@ class ConfigManager:
             "active_profile": self.DEFAULT_PROFILE_NAME,
             "countdown_seconds": 5,
             "enable_countdown": True,
+            "launch_minimized": False,
             "autostart_enabled": True,
             "profiles": {
                 self.DEFAULT_PROFILE_NAME: {
@@ -131,6 +136,7 @@ class ConfigManager:
         self.active_profile = str(data.get("active_profile", self.DEFAULT_PROFILE_NAME))
         self.countdown_seconds = max(0, int(data.get("countdown_seconds", 5)))
         self.enable_countdown = bool(data.get("enable_countdown", True))
+        self.launch_minimized = bool(data.get("launch_minimized", False))
         self.autostart_enabled = bool(data.get("autostart_enabled", True))
 
         profiles_raw = data.get("profiles", {})
@@ -153,6 +159,7 @@ class ConfigManager:
             "active_profile": self.active_profile,
             "countdown_seconds": self.countdown_seconds,
             "enable_countdown": self.enable_countdown,
+            "launch_minimized": self.launch_minimized,
             "autostart_enabled": self.autostart_enabled,
             "profiles": {
                 name: {"apps": [app.to_dict() for app in prof.apps]}

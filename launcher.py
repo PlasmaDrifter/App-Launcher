@@ -6,6 +6,7 @@ correctly associate running windows with their .desktop file and display custom 
 """
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -64,7 +65,87 @@ class AppLauncher:
         return ["/bin/sh", "-c", full_shell_cmd], False
 
     @classmethod
-    def launch(cls, app: AppEntry) -> bool:
+    def get_target_window_classes(cls, app: AppEntry) -> List[str]:
+        """Resolves probable window classes for the given app entry."""
+        classes = []
+        desktop_target = app.desktop_file.strip()
+        desktop_path: Path = Path(desktop_target).expanduser() if desktop_target else Path()
+        
+        if desktop_path.is_file():
+            from desktop_scanner import DesktopScanner
+            parsed = DesktopScanner.parse_desktop_file(desktop_path)
+            if parsed:
+                if parsed.startup_wm_class:
+                    classes.append(parsed.startup_wm_class)
+                if parsed.kde_app_id and parsed.kde_app_id not in classes:
+                    classes.append(parsed.kde_app_id)
+            stem = desktop_path.stem
+            if stem.endswith(".desktop"):
+                stem = stem[:-8]
+            if stem and stem not in classes:
+                classes.append(stem)
+        elif desktop_target:
+            stem = Path(desktop_target).stem
+            if stem.endswith(".desktop"):
+                stem = stem[:-8]
+            if stem:
+                classes.append(stem)
+
+        # Also extract from command if specified (e.g. --class foo)
+        if app.command:
+            import re
+            m = re.search(r"--class\s+([^\s]+)", app.command)
+            if m and m.group(1) not in classes:
+                classes.append(m.group(1))
+            parts = app.command.split()
+            if parts:
+                cmd_stem = Path(parts[0]).name
+                if cmd_stem and cmd_stem not in classes:
+                    classes.append(cmd_stem)
+
+        return classes
+
+    @classmethod
+    def minimize_window_deferred(cls, app: AppEntry, delay_seconds: float = 0.0) -> None:
+        """Polls for the app window's appearance and minimizes it via kdotool."""
+        if not cls._has_binary("kdotool"):
+            return
+
+        classes = cls.get_target_window_classes(app)
+        if not classes:
+            return
+
+        # Build regex for class search
+        class_regex = "|".join(re.escape(c) for c in classes)
+        total_delay = max(0.0, float(app.delay_seconds)) + delay_seconds
+
+        # Background script: sleeps until startup delay passes, then polls kdotool search for window and minimizes
+        script = (
+            f"sleep {total_delay}; "
+            f"for i in $(seq 1 30); do "
+            f"wids=$(kdotool search --class '{class_regex}' 2>/dev/null); "
+            f'if [ -n "$wids" ]; then '
+            f'for wid in $wids; do kdotool windowminimize "$wid" 2>/dev/null; done; '
+            f"break; "
+            f"fi; "
+            f"sleep 0.25; "
+            f"done"
+        )
+
+        try:
+            subprocess.Popen(
+                ["/bin/sh", "-c", script],
+                start_new_session=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+            )
+        except Exception:
+            pass
+
+    @classmethod
+    def launch(cls, app: AppEntry, global_launch_minimized: bool = False) -> bool:
         """Launches a single app in a detached background session."""
         try:
             args, use_shell = cls.get_launch_command(app)
@@ -80,6 +161,11 @@ class AppLauncher:
                 close_fds=True,
                 env=env,
             )
+
+            # Check if application should be minimized upon launch
+            if app.start_minimized or global_launch_minimized:
+                cls.minimize_window_deferred(app)
+
             return True
         except Exception:
             return False
@@ -127,13 +213,13 @@ class AppLauncher:
             pass
 
     @classmethod
-    def launch_many(cls, apps: List[AppEntry]) -> int:
+    def launch_many(cls, apps: List[AppEntry], global_launch_minimized: bool = False) -> int:
         """Launches all enabled applications in the list. Returns count launched."""
         initial_activity = cls.get_current_activity()
         launched_count = 0
         for app in apps:
             if app.enabled:
-                if cls.launch(app):
+                if cls.launch(app, global_launch_minimized=global_launch_minimized):
                     launched_count += 1
 
         if initial_activity:

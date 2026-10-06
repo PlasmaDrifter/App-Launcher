@@ -75,11 +75,14 @@ class AppDialog(FramelessDialogBase):
         self.inst_delay_spin.setSuffix(" seconds")
         self.inst_enabled_check = QCheckBox("Enabled for launch")
         self.inst_enabled_check.setChecked(True)
+        self.inst_minimized_check = QCheckBox("Start minimized")
+        self.inst_minimized_check.setChecked(False)
 
         inst_form.addRow("Display Name:", self.inst_name_input)
         inst_form.addRow("Command / Exec:", self.inst_cmd_input)
         inst_form.addRow("Startup Delay:", self.inst_delay_spin)
         inst_form.addRow("", self.inst_enabled_check)
+        inst_form.addRow("", self.inst_minimized_check)
 
         installed_layout.addWidget(installed_details_group)
         self.tab_widget.addTab(self.installed_tab, "Installed Applications")
@@ -109,12 +112,15 @@ class AppDialog(FramelessDialogBase):
 
         self.custom_enabled_check = QCheckBox("Enabled for launch")
         self.custom_enabled_check.setChecked(True)
+        self.custom_minimized_check = QCheckBox("Start minimized")
+        self.custom_minimized_check.setChecked(False)
 
         custom_form.addRow("Application Name:", self.custom_name_input)
         custom_form.addRow("Command Line:", self.custom_cmd_input)
         custom_form.addRow("Icon:", icon_row)
         custom_form.addRow("Startup Delay:", self.custom_delay_spin)
         custom_form.addRow("", self.custom_enabled_check)
+        custom_form.addRow("", self.custom_minimized_check)
 
         custom_layout.addLayout(custom_form)
         custom_layout.addStretch()
@@ -206,6 +212,7 @@ class AppDialog(FramelessDialogBase):
             self.inst_cmd_input.setText(entry.command)
             self.inst_delay_spin.setValue(entry.delay_seconds)
             self.inst_enabled_check.setChecked(entry.enabled)
+            self.inst_minimized_check.setChecked(entry.start_minimized)
             # Find and select in list if present
             for i in range(self.app_list_widget.count()):
                 item = self.app_list_widget.item(i)
@@ -221,6 +228,7 @@ class AppDialog(FramelessDialogBase):
             self.custom_icon_input.setText(entry.icon)
             self.custom_delay_spin.setValue(entry.delay_seconds)
             self.custom_enabled_check.setChecked(entry.enabled)
+            self.custom_minimized_check.setChecked(entry.start_minimized)
 
     def _on_save(self) -> None:
         current_tab = self.tab_widget.currentIndex()
@@ -231,6 +239,7 @@ class AppDialog(FramelessDialogBase):
             cmd = self.inst_cmd_input.text().strip()
             delay = self.inst_delay_spin.value()
             enabled = self.inst_enabled_check.isChecked()
+            start_minimized = self.inst_minimized_check.isChecked()
 
             if not name:
                 QMessageBox.warning(self, "Validation Error", "Application name cannot be empty.")
@@ -261,6 +270,7 @@ class AppDialog(FramelessDialogBase):
                 icon=icon,
                 enabled=enabled,
                 delay_seconds=delay,
+                start_minimized=start_minimized,
             )
             self.accept()
 
@@ -271,6 +281,7 @@ class AppDialog(FramelessDialogBase):
             icon = self.custom_icon_input.text().strip()
             delay = self.custom_delay_spin.value()
             enabled = self.custom_enabled_check.isChecked()
+            start_minimized = self.custom_minimized_check.isChecked()
 
             if not name:
                 QMessageBox.warning(self, "Validation Error", "Application name cannot be empty.")
@@ -289,6 +300,7 @@ class AppDialog(FramelessDialogBase):
                 icon=icon,
                 enabled=enabled,
                 delay_seconds=delay,
+                start_minimized=start_minimized,
             )
             self.accept()
 

@@ -291,7 +291,7 @@ class MainWindow(QMainWindow):
         title_lbl.setFont(title_font)
         title_lbl.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
 
-        version_lbl = QLabel("v0.1.0")
+        version_lbl = QLabel("v0.1.1")
         version_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Normal)
         version_lbl.setFont(version_font)
         version_lbl.setStyleSheet("color: #64748b; border: none; background: transparent; padding-top: 4px;")

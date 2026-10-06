@@ -7,10 +7,10 @@ Complies with zero-emoji guidelines.
 from typing import Optional
 
 from PyQt6.QtCore import (
-    QEasingCurve, QPropertyAnimation, QRectF, QSize, Qt, pyqtProperty, pyqtSignal
+    QEasingCurve, QPropertyAnimation, QPoint, QRect, QRectF, QSize, Qt, pyqtProperty, pyqtSignal
 )
 from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPaintEvent
-from PyQt6.QtWidgets import QAbstractButton, QLabel, QWidget
+from PyQt6.QtWidgets import QAbstractButton, QLabel, QWidget, QLayout, QLayoutItem
 
 
 class ToggleSwitch(QAbstractButton):
@@ -274,4 +274,85 @@ class StepperSpinBox(QWidget):
                 }
             """)
             self._update_display()
+
+
+class FlowLayout(QLayout):
+    """Standard Qt FlowLayout that wraps child widgets across multiple lines."""
+
+    def __init__(self, parent: Optional[QWidget] = None, margin: int = 0, spacing: int = 6):
+        super().__init__(parent)
+        self.item_list: list[QLayoutItem] = []
+        self.setContentsMargins(margin, margin, margin, margin)
+        self.setSpacing(spacing)
+
+    def addItem(self, item: QLayoutItem) -> None:
+        self.item_list.append(item)
+
+    def count(self) -> int:
+        return len(self.item_list)
+
+    def itemAt(self, index: int) -> Optional[QLayoutItem]:
+        if 0 <= index < len(self.item_list):
+            return self.item_list[index]
+        return None
+
+    def takeAt(self, index: int) -> Optional[QLayoutItem]:
+        if 0 <= index < len(self.item_list):
+            return self.item_list.pop(index)
+        return None
+
+    def expandingDirections(self) -> Qt.Orientation:
+        return Qt.Orientation(0)
+
+    def hasHeightForWidth(self) -> bool:
+        return True
+
+    def heightForWidth(self, width: int) -> int:
+        return self._do_layout(QRect(0, 0, width, 0), test_only=True)
+
+    def setGeometry(self, rect: QRect) -> None:
+        super().setGeometry(rect)
+        self._do_layout(rect, test_only=False)
+
+    def sizeHint(self) -> QSize:
+        return self.minimumSize()
+
+    def minimumSize(self) -> QSize:
+        size = QSize()
+        for item in self.item_list:
+            size = size.expandedTo(item.minimumSize())
+        margins = self.contentsMargins()
+        return size + QSize(margins.left() + margins.right(), margins.top() + margins.bottom())
+
+    def _do_layout(self, rect: QRect, test_only: bool) -> int:
+        margins = self.contentsMargins()
+        effective_rect = rect.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom())
+        x = effective_rect.x()
+        y = effective_rect.y()
+        line_height = 0
+        spacing = self.spacing()
+
+        for item in self.item_list:
+            wid = item.widget()
+            if wid and not wid.isVisible():
+                continue
+
+            space_x = spacing
+            space_y = spacing
+            next_x = x + item.sizeHint().width() + space_x
+
+            if next_x - space_x > effective_rect.right() and line_height > 0:
+                x = effective_rect.x()
+                y = y + line_height + space_y
+                next_x = x + item.sizeHint().width() + space_x
+                line_height = 0
+
+            if not test_only:
+                item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
+
+            x = next_x
+            line_height = max(line_height, item.sizeHint().height())
+
+        return y + line_height - rect.y() + margins.bottom()
+
 

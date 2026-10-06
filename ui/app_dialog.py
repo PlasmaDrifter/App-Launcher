@@ -24,7 +24,7 @@ from config import AppEntry
 from desktop_scanner import DesktopAppInfo, DesktopScanner
 from ui.frameless import FramelessDialogBase
 from ui.icon_utils import resolve_icon
-from ui.widgets import StepperSpinBox
+from ui.widgets import StepperSpinBox, FlowLayout
 
 
 class AppDialog(FramelessDialogBase):
@@ -109,18 +109,9 @@ class AppDialog(FramelessDialogBase):
         search_box.addWidget(self.search_input)
         left_pane.addLayout(search_box)
 
-        # Category Chips
-        category_scroll = QScrollArea()
-        category_scroll.setFixedHeight(36)
-        category_scroll.setWidgetResizable(True)
-        category_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        category_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        category_scroll.setStyleSheet("background: transparent; border: none;")
-
-        category_widget = QWidget()
-        category_layout = QHBoxLayout(category_widget)
-        category_layout.setContentsMargins(0, 0, 0, 0)
-        category_layout.setSpacing(6)
+        # Category Chips (FlowLayout wrapped so all categories are immediately visible)
+        category_container = QWidget()
+        category_layout = FlowLayout(category_container, margin=0, spacing=6)
 
         self.category_group = QButtonGroup(self)
         self.category_group.setExclusive(True)
@@ -130,8 +121,8 @@ class AppDialog(FramelessDialogBase):
                 background-color: #1e293b;
                 color: #94a3b8;
                 border: 1px solid #334155;
-                border-radius: 14px;
-                padding: 4px 12px;
+                border-radius: 13px;
+                padding: 4px 11px;
                 font-size: 11px;
                 font-weight: 500;
             }
@@ -157,9 +148,7 @@ class AppDialog(FramelessDialogBase):
             self.category_group.addButton(btn, idx)
             category_layout.addWidget(btn)
 
-        category_layout.addStretch()
-        category_scroll.setWidget(category_widget)
-        left_pane.addWidget(category_scroll)
+        left_pane.addWidget(category_container)
 
         # Application List
         self.app_list_widget = QListWidget()

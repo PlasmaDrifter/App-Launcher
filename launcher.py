@@ -101,17 +101,22 @@ class AppLauncher:
         return ""
 
     @staticmethod
-    def restore_activity_deferred(activity_id: str, delay_seconds: float = 1.2) -> None:
+    def restore_activity_deferred(activity_id: str, duration_seconds: float = 12.0) -> None:
         """Ensures the desktop view stays on the starting activity after apps on secondary activities spawn."""
         if not activity_id:
             return
-        cmd = (
-            f"sleep {delay_seconds} && "
-            f"qdbus-qt6 org.kde.ActivityManager /ActivityManager/Activities SetCurrentActivity '{activity_id}'"
+        script = (
+            f"for i in $(seq 1 24); do "
+            f"sleep 0.5; "
+            f"curr=$(qdbus-qt6 org.kde.ActivityManager /ActivityManager/Activities CurrentActivity 2>/dev/null); "
+            f'if [ -n "$curr" ] && [ "$curr" != "{activity_id}" ]; then '
+            f'qdbus-qt6 org.kde.ActivityManager /ActivityManager/Activities SetCurrentActivity "{activity_id}" 2>/dev/null; '
+            f"fi; "
+            f"done"
         )
         try:
             subprocess.Popen(
-                ["/bin/sh", "-c", cmd],
+                ["/bin/sh", "-c", script],
                 start_new_session=True,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,

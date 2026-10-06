@@ -12,19 +12,18 @@ from pathlib import Path
 from typing import Callable, List, Optional
 
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QWidget, QListWidget, QListWidgetItem,
-    QCheckBox, QFileDialog, QFormLayout, QMessageBox, QFrame,
-    QScrollArea, QSplitter, QButtonGroup
+    QButtonGroup, QCheckBox, QFileDialog, QFormLayout, QFrame,
+    QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QMessageBox, QPushButton, QVBoxLayout, QWidget
 )
-from PyQt6.QtGui import QIcon, QFont
 
 from config import AppEntry
 from desktop_scanner import DesktopAppInfo, DesktopScanner
 from ui.frameless import FramelessDialogBase
 from ui.icon_utils import resolve_icon
-from ui.widgets import StepperSpinBox, FlowLayout
+from ui.widgets import FlowLayout, StepperSpinBox
 
 
 class AppDialog(FramelessDialogBase):
@@ -53,6 +52,7 @@ class AppDialog(FramelessDialogBase):
         super().__init__(parent, title=title)
         self.existing_entry = app_entry
         self.on_app_added_callback = on_app_added
+        self.result_entry: Optional[AppEntry] = None
 
         self.selected_scanner_app: Optional[DesktopAppInfo] = None
         self.scanned_apps: List[DesktopAppInfo] = []
@@ -600,5 +600,5 @@ class AppDialog(FramelessDialogBase):
             self.reject()
 
     def get_result(self) -> Optional[AppEntry]:
-        return getattr(self, "result_entry", None)
+        return self.result_entry
 

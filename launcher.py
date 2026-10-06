@@ -5,7 +5,7 @@ Prefers gtk-launch / gio launch for desktop entries so desktop environments (suc
 correctly associate running windows with their .desktop file and display custom icons.
 """
 
-import os
+import functools
 import re
 import shutil
 import subprocess
@@ -19,6 +19,7 @@ class AppLauncher:
     """Manages spawning applications in decoupled sessions."""
 
     @staticmethod
+    @functools.lru_cache(maxsize=32)
     def _has_binary(name: str) -> bool:
         return shutil.which(name) is not None
 
@@ -93,7 +94,6 @@ class AppLauncher:
 
         # Also extract from command if specified (e.g. --class foo)
         if app.command:
-            import re
             m = re.search(r"--class\s+([^\s]+)", app.command)
             if m and m.group(1) not in classes:
                 classes.append(m.group(1))
@@ -150,7 +150,6 @@ class AppLauncher:
         try:
             args, use_shell = cls.get_launch_command(app)
             # Create a completely detached process
-            env = os.environ.copy()
             subprocess.Popen(
                 args,
                 shell=use_shell,
@@ -159,7 +158,6 @@ class AppLauncher:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 close_fds=True,
-                env=env,
             )
 
             # Check if application should be minimized upon launch

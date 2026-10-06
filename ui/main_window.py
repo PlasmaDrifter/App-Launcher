@@ -5,10 +5,8 @@ badge pills, glowing progress indicators, and streamlined vertical layout.
 Complies with zero-emoji guidelines and dynamic path resolution.
 """
 
-from typing import Optional
-
 from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QFont, QIcon, QPixmap
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QListWidget, QListWidgetItem,
@@ -23,6 +21,39 @@ from ui.icon_utils import resolve_icon
 from ui.profile_dialog import ProfileDialog
 from ui.settings_dialog import SettingsDialog
 from ui.widgets import BadgePill, ToggleSwitch
+
+MICRO_BTN_STYLE = """
+    QPushButton {
+        background-color: #1e293b;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        font-size: 10px;
+        padding: 0px;
+    }
+    QPushButton:hover {
+        background-color: #334155;
+        color: #ffffff;
+        border-color: #38bdf8;
+    }
+"""
+
+MICRO_DELETE_BTN_STYLE = """
+    QPushButton {
+        background-color: rgba(239, 68, 68, 0.12);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 0px;
+    }
+    QPushButton:hover {
+        background-color: #ef4444;
+        color: #ffffff;
+        border-color: #ef4444;
+    }
+"""
 
 
 class AppCardWidget(QFrame):
@@ -135,61 +166,30 @@ class AppCardWidget(QFrame):
         action_layout = QHBoxLayout()
         action_layout.setSpacing(4)
 
-        micro_btn_style = """
-            QPushButton {
-                background-color: #1e293b;
-                color: #cbd5e1;
-                border: 1px solid #334155;
-                border-radius: 4px;
-                font-size: 10px;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: #334155;
-                color: #ffffff;
-                border-color: #38bdf8;
-            }
-        """
-
         self.up_btn = QPushButton("▲")
         self.up_btn.setFixedSize(22, 22)
-        self.up_btn.setStyleSheet(micro_btn_style)
+        self.up_btn.setStyleSheet(MICRO_BTN_STYLE)
         self.up_btn.setToolTip("Move up")
         self.up_btn.clicked.connect(self._on_move_up)
         action_layout.addWidget(self.up_btn)
 
         self.down_btn = QPushButton("▼")
         self.down_btn.setFixedSize(22, 22)
-        self.down_btn.setStyleSheet(micro_btn_style)
+        self.down_btn.setStyleSheet(MICRO_BTN_STYLE)
         self.down_btn.setToolTip("Move down")
         self.down_btn.clicked.connect(self._on_move_down)
         action_layout.addWidget(self.down_btn)
 
         self.edit_btn = QPushButton("Edit")
         self.edit_btn.setFixedSize(32, 22)
-        self.edit_btn.setStyleSheet(micro_btn_style)
+        self.edit_btn.setStyleSheet(MICRO_BTN_STYLE)
         self.edit_btn.setToolTip("Edit application details")
         self.edit_btn.clicked.connect(self._on_edit)
         action_layout.addWidget(self.edit_btn)
 
         self.delete_btn = QPushButton("x")
         self.delete_btn.setFixedSize(22, 22)
-        self.delete_btn.setStyleSheet("""
-            QPushButton {
-                background-color: rgba(239, 68, 68, 0.12);
-                color: #f87171;
-                border: 1px solid rgba(239, 68, 68, 0.25);
-                border-radius: 4px;
-                font-size: 11px;
-                font-weight: bold;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: #ef4444;
-                color: #ffffff;
-                border-color: #ef4444;
-            }
-        """)
+        self.delete_btn.setStyleSheet(MICRO_DELETE_BTN_STYLE)
         self.delete_btn.setToolTip("Remove application")
         self.delete_btn.clicked.connect(self._on_delete)
         action_layout.addWidget(self.delete_btn)
@@ -582,9 +582,8 @@ class MainWindow(QMainWindow):
     def _update_countdown_label(self) -> None:
         current_profile = self.config_manager.get_current_profile()
         enabled_count = sum(1 for a in current_profile.apps if a.enabled)
-        sec_str = "s" if self.remaining_seconds != 1 else "s"
         self.countdown_status_label.setText(
-            f"Auto-launching in {self.remaining_seconds}{sec_str} ({enabled_count} apps enabled)"
+            f"Auto-launching in {self.remaining_seconds}s ({enabled_count} apps enabled)"
         )
         self.progress_bar.setValue(self.remaining_seconds)
 

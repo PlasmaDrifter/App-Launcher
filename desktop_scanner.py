@@ -6,6 +6,7 @@ Strictly complies with dynamic path resolution (no hardcoded usernames).
 """
 
 import configparser
+import functools
 import os
 import re
 from dataclasses import dataclass
@@ -28,12 +29,19 @@ class DesktopAppInfo:
     icon_path: Optional[str] = None
     startup_wm_class: str = ""
     kde_app_id: str = ""
-    categories: List[str] = None
+    categories: Optional[List[str]] = None
+    no_display: bool = False
+    _search_cache: Optional[str] = None
 
     def search_text(self) -> str:
-        """Returns consolidated lowercase string for fuzzy searching."""
-        cats = " ".join(self.categories or [])
-        return f"{self.name} {self.generic_name} {self.comment} {self.clean_command} {self.desktop_id} {cats}".lower()
+        """Returns consolidated lowercase string for fuzzy searching (cached)."""
+        if self._search_cache is None:
+            cats = " ".join(self.categories or [])
+            self._search_cache = (
+                f"{self.name} {self.generic_name} {self.comment} "
+                f"{self.clean_command} {self.desktop_id} {cats}"
+            ).lower()
+        return self._search_cache
 
 
 def clean_desktop_exec(raw_exec: str) -> str:
@@ -43,6 +51,7 @@ def clean_desktop_exec(raw_exec: str) -> str:
     return " ".join(cleaned.split()).strip()
 
 
+@functools.lru_cache(maxsize=512)
 def find_icon_file(icon_name: str) -> Optional[str]:
     """Finds an absolute file path for an icon if not already an absolute path."""
     if not icon_name:
@@ -71,9 +80,8 @@ def find_icon_file(icon_name: str) -> Optional[str]:
     ]
 
     for sdir in search_dirs:
-        if not sdir.exists():
+        if not sdir.is_dir():
             continue
-        # Direct check
         for ext in ["", ".svg", ".png", ".xpm"]:
             direct_file = sdir / f"{icon_name}{ext}"
             if direct_file.is_file():
@@ -130,7 +138,7 @@ class DesktopScanner:
                     if app_info is None:
                         continue
 
-                    if not include_no_display and getattr(app_info, "_no_display", False):
+                    if not include_no_display and app_info.no_display:
                         continue
 
                     seen_ids.add(desktop_id)
@@ -184,7 +192,7 @@ class DesktopScanner:
         clean_cmd = clean_desktop_exec(exec_cmd)
         icon_path = find_icon_file(icon)
 
-        info = DesktopAppInfo(
+        return DesktopAppInfo(
             desktop_file=str(path),
             desktop_id=path.name,
             name=name,
@@ -197,6 +205,5 @@ class DesktopScanner:
             startup_wm_class=startup_wm_class,
             kde_app_id=kde_app_id,
             categories=categories,
+            no_display=no_display,
         )
-        setattr(info, "_no_display", no_display)
-        return info

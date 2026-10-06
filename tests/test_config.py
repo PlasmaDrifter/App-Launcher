@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from config import AppEntry, ConfigManager, Profile
+from config import AppEntry, ConfigManager
 
 
 class TestConfigManager(unittest.TestCase):

@@ -4,6 +4,7 @@ Ensures no hardcoded user paths are written into configuration or desktop entrie
 Uses dynamic environment resolution ($HOME / Path.home()) and standard XDG locations.
 """
 
+import sys
 from pathlib import Path
 
 
@@ -60,7 +61,6 @@ class AutostartManager:
     @staticmethod
     def generate_desktop_content(autostart: bool = False) -> str:
         """Generates desktop file content without any hardcoded usernames."""
-        import sys
         script_path = Path(__file__).resolve().parent / "autolaunch.py"
         py_bin = sys.executable or "/usr/bin/python3"
         flag = " --autostart" if autostart else ""

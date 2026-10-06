@@ -7,13 +7,14 @@ Strictly dynamic path handling (no hardcoded user paths).
 from typing import Optional
 
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QSpinBox, QCheckBox, QGroupBox, QFormLayout, QMessageBox, QWidget
+    QCheckBox, QGroupBox, QHBoxLayout, QLabel,
+    QMessageBox, QPushButton, QVBoxLayout, QWidget
 )
 
 from autostart import AutostartManager
 from config import ConfigManager
 from ui.frameless import FramelessDialogBase
+from ui.widgets import StepperSpinBox
 
 
 class SettingsDialog(FramelessDialogBase):
@@ -55,7 +56,6 @@ class SettingsDialog(FramelessDialogBase):
         duration_lbl.setStyleSheet("color: #94a3b8; font-size: 12px;")
         duration_layout.addWidget(duration_lbl)
 
-        from ui.widgets import StepperSpinBox
         self.countdown_spin = StepperSpinBox(
             minimum=1,
             maximum=120,

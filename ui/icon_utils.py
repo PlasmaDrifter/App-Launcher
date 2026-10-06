@@ -7,7 +7,9 @@ Strictly avoids hardcoded user paths.
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon
+
+from desktop_scanner import find_icon_file
 
 
 def resolve_icon(icon_name: Optional[str], icon_path: Optional[str] = None) -> QIcon:
@@ -37,7 +39,6 @@ def resolve_icon(icon_name: Optional[str], icon_path: Optional[str] = None) -> Q
             return theme_icon
 
         # 4. Check scanner icon search
-        from desktop_scanner import find_icon_file
         discovered = find_icon_file(icon_name)
         if discovered and Path(discovered).is_file():
             icon = QIcon(discovered)

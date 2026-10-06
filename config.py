@@ -7,9 +7,20 @@ Manages profiles, application lists, countdown timers, and autostart preferences
 import json
 import os
 import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+_HOME_STR = str(Path.home())
+
+
+def _collapse_path(s: str) -> str:
+    """Collapses user home path to ~ or $HOME for portability."""
+    if not s:
+        return ""
+    if s.startswith(_HOME_STR):
+        return "~" + s[len(_HOME_STR):]
+    return s.replace(_HOME_STR, "$HOME")
 
 
 @dataclass
@@ -39,20 +50,12 @@ class AppEntry:
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        home = str(Path.home())
-        def _collapse(s: str) -> str:
-            if not s:
-                return ""
-            if s.startswith(home):
-                return "~" + s[len(home):]
-            return s.replace(home, "$HOME")
-
         return {
             "id": self.id,
             "name": self.name,
-            "command": _collapse(self.command),
-            "desktop_file": _collapse(self.desktop_file),
-            "icon": _collapse(self.icon),
+            "command": _collapse_path(self.command),
+            "desktop_file": _collapse_path(self.desktop_file),
+            "icon": _collapse_path(self.icon),
             "enabled": self.enabled,
             "delay_seconds": self.delay_seconds,
             "start_minimized": self.start_minimized,

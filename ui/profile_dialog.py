@@ -14,6 +14,7 @@ class ProfileDialog(FramelessDialogBase):
 
     def __init__(self, parent: Optional[QWidget] = None, current_name: str = "", title: str = "New Profile"):
         super().__init__(parent, title=title)
+        self.result_name: str = ""
         self.setMinimumWidth(360)
 
         main_layout = self.content_layout
@@ -63,4 +64,4 @@ class ProfileDialog(FramelessDialogBase):
         self.accept()
 
     def get_profile_name(self) -> str:
-        return getattr(self, "result_name", "")
+        return self.result_name

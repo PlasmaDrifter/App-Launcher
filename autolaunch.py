@@ -14,7 +14,6 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QPalette, QColor
 from PyQt6.QtWidgets import QApplication
 

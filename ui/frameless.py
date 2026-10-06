@@ -8,10 +8,9 @@ Complies with zero-emoji guidelines and dynamic path resolution.
 from typing import Optional
 
 from PyQt6.QtCore import QPoint, Qt, QTimer
-from PyQt6.QtGui import QColor, QFont, QMouseEvent
+from PyQt6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import (
-    QApplication, QDialog, QFrame, QGraphicsDropShadowEffect, QHBoxLayout,
-    QLabel, QPushButton, QVBoxLayout, QWidget
+    QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 )
 
 
@@ -49,8 +48,6 @@ class WindowButton(QPushButton):
         super().mouseReleaseEvent(event)
 
     def paintEvent(self, event: QPaintEvent) -> None:
-        from PyQt6.QtGui import QPainter, QPainterPath, QPen, QColor, QRadialGradient
-
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -189,22 +186,21 @@ class FramelessDialogBase(QDialog):
     def center_over_parent(self) -> None:
         """Positions the dialog centered over its parent window, or screen center if no parent."""
         parent = self.parentWidget()
+        dlg_width = self.width() if self.width() > 0 else self.sizeHint().width()
+        dlg_height = self.height() if self.height() > 0 else self.sizeHint().height()
+
         if parent:
             parent_geo = parent.frameGeometry()
-            dlg_width = self.width() if self.width() > 0 else self.sizeHint().width()
-            dlg_height = self.height() if self.height() > 0 else self.sizeHint().height()
-
             # Align dialog center with the parent window's center
             x = parent_geo.x() + (parent_geo.width() - dlg_width) // 2
             y = parent_geo.y() + (parent_geo.height() - dlg_height) // 2
-
             self.move(x, y)
         else:
             screen = self.screen()
             if screen:
                 screen_geo = screen.availableGeometry()
-                x = screen_geo.left() + (screen_geo.width() - self.width()) // 2
-                y = screen_geo.top() + (screen_geo.height() - self.height()) // 2
+                x = screen_geo.left() + (screen_geo.width() - dlg_width) // 2
+                y = screen_geo.top() + (screen_geo.height() - dlg_height) // 2
                 self.move(x, y)
 
     def showEvent(self, event) -> None:

@@ -9,9 +9,9 @@ AUTOSTART_DIR="${HOME}/.config/autostart"
 mkdir -p "${BIN_DIR}" "${APP_DIR}" "${AUTOSTART_DIR}"
 
 # 1. Install CLI wrapper / symlink in ~/.local/bin
-cat <<'EOF' > "${BIN_DIR}/autolaunch"
+cat <<EOF > "${BIN_DIR}/autolaunch"
 #!/bin/bash
-exec python3 "${HOME}/Source/AutoLaunch/autolaunch.py" "$@"
+exec python3 "${SCRIPT_DIR}/autolaunch.py" "\$@"
 EOF
 chmod +x "${BIN_DIR}/autolaunch"
 chmod +x "${SCRIPT_DIR}/autolaunch.py"

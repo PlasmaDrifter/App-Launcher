@@ -9,10 +9,62 @@ from typing import Optional
 from PyQt6.QtCore import (
     QEasingCurve, QPropertyAnimation, QPoint, QRect, QRectF, QSize, Qt, pyqtProperty, pyqtSignal
 )
-from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPaintEvent
+from PyQt6.QtGui import QBrush, QColor, QFont, QFontMetrics, QPainter, QPaintEvent
 from PyQt6.QtWidgets import (
-    QAbstractButton, QHBoxLayout, QLabel, QLayout, QLayoutItem, QPushButton, QWidget, QSizePolicy
+    QAbstractButton, QHBoxLayout, QLabel, QLayout, QLayoutItem, QPushButton,
+    QToolTip, QWidget, QSizePolicy
 )
+
+
+class HelpBadge(QPushButton):
+    """Circular '?' badge providing helpful configuration info via tooltip and click."""
+
+    def __init__(self, info_text: str, parent: Optional[QWidget] = None, max_pixel_width: int = 290):
+        super().__init__("?", parent)
+        self._raw_text = info_text
+        self._blocked_text = self._wrap_by_pixels(info_text.strip(), max_pixel_width)
+        self.setToolTip(self._blocked_text)
+        self.setFixedSize(18, 18)
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #e2e8f0;
+                border: 1px solid #384e6c;
+                border-radius: 9px;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: #3b5f8a;
+                color: #ffffff;
+                border-color: #72a5cc;
+            }
+        """)
+        self.clicked.connect(self._show_info)
+
+    @staticmethod
+    def _wrap_by_pixels(text: str, max_px: int) -> str:
+        f = QFont()
+        f.setPixelSize(14)
+        fm = QFontMetrics(f)
+        lines = []
+        for paragraph in text.split("\n"):
+            words = paragraph.split()
+            curr_line = []
+            for word in words:
+                trial = " ".join(curr_line + [word])
+                if fm.horizontalAdvance(trial) > max_px and curr_line:
+                    lines.append(" ".join(curr_line))
+                    curr_line = [word]
+                else:
+                    curr_line.append(word)
+            if curr_line:
+                lines.append(" ".join(curr_line))
+        return "\n".join(lines)
+
+    def _show_info(self) -> None:
+        QToolTip.showText(self.mapToGlobal(self.rect().bottomLeft()), self._blocked_text, self)
 
 
 class ElidedLabel(QLabel):
@@ -92,11 +144,11 @@ class ToggleSwitch(QAbstractButton):
         radius = h / 2.0
 
         # Background track color: interpolate between inactive and active
-        # Inactive: #334155 (slate-700), Active: #0369a1 (muted dark sky/cyan-slate)
+        # Inactive: #334155 (slate-700), Active: #2a5578 (muted dark slate-blue)
         t = self._thumb_position
-        r = int(51 + (3 - 51) * t)
-        g = int(65 + (105 - 65) * t)
-        b = int(85 + (161 - 85) * t)
+        r = int(51 + (42 - 51) * t)
+        g = int(65 + (85 - 65) * t)
+        b = int(85 + (120 - 85) * t)
         track_color = QColor(r, g, b)
 
         # Draw track
@@ -126,9 +178,9 @@ class BadgePill(QLabel):
     def __init__(
         self,
         text: str,
-        bg_color: str = "rgba(56, 189, 248, 0.15)",
-        text_color: str = "#38bdf8",
-        border_color: str = "rgba(56, 189, 248, 0.35)",
+        bg_color: str = "rgba(70, 115, 150, 0.15)",
+        text_color: str = "#6297bf",
+        border_color: str = "rgba(98, 151, 191, 0.4)",
         parent: Optional[QWidget] = None
     ):
         super().__init__(text, parent)
@@ -160,8 +212,37 @@ STEPPER_BTN_STYLE = """
     }
     QPushButton:hover {
         background-color: #334155;
-        border-color: #38bdf8;
-        color: #38bdf8;
+        border-color: #4a6d8c;
+        color: #6297bf;
+    }
+    QPushButton:pressed {
+        background-color: #0f172a;
+    }
+    QPushButton:disabled {
+        background-color: #111827;
+        color: #475569;
+        border-color: #1f2937;
+    }
+"""
+
+STEPPER_BTN_COMPACT_STYLE = """
+    QPushButton {
+        background-color: #1e293b;
+        color: #f1f5f9;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: bold;
+        padding: 0px;
+        min-width: 22px;
+        max-width: 22px;
+        min-height: 24px;
+        max-height: 24px;
+    }
+    QPushButton:hover {
+        background-color: #334155;
+        border-color: #4a6d8c;
+        color: #6297bf;
     }
     QPushButton:pressed {
         background-color: #0f172a;
@@ -201,6 +282,34 @@ STEPPER_LABEL_STYLE_DISABLED = """
     }
 """
 
+STEPPER_LABEL_COMPACT_ENABLED = """
+    QLabel {
+        background-color: #111827;
+        color: #f8fafc;
+        border: 1px solid #28354f;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-weight: 600;
+        font-size: 11px;
+        min-width: 44px;
+        min-height: 18px;
+    }
+"""
+
+STEPPER_LABEL_COMPACT_DISABLED = """
+    QLabel {
+        background-color: #0f172a;
+        color: #475569;
+        border: 1px solid #1e293b;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-weight: 600;
+        font-size: 11px;
+        min-width: 44px;
+        min-height: 18px;
+    }
+"""
+
 
 class StepperSpinBox(QWidget):
     """SpinBox with prominent +/- stepper buttons and read-only value display."""
@@ -215,6 +324,7 @@ class StepperSpinBox(QWidget):
         suffix: str = " seconds",
         step: int = 1,
         parent: Optional[QWidget] = None,
+        compact: bool = False,
     ):
         super().__init__(parent)
         self._minimum = minimum
@@ -222,27 +332,32 @@ class StepperSpinBox(QWidget):
         self._value = max(minimum, min(value, maximum))
         self._suffix = suffix
         self._step = step
+        self._compact = compact
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setSpacing(4 if compact else 6)
+
+        btn_style = STEPPER_BTN_COMPACT_STYLE if compact else STEPPER_BTN_STYLE
+        label_style = STEPPER_LABEL_COMPACT_ENABLED if compact else STEPPER_LABEL_STYLE_ENABLED
 
         self.minus_btn = QPushButton("−")
-        self.minus_btn.setStyleSheet(STEPPER_BTN_STYLE)
+        self.minus_btn.setStyleSheet(btn_style)
         self.minus_btn.clicked.connect(self._decrement)
 
         self.display_label = QLabel()
         self.display_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.display_label.setStyleSheet(STEPPER_LABEL_STYLE_ENABLED)
+        self.display_label.setStyleSheet(label_style)
 
         self.plus_btn = QPushButton("+")
-        self.plus_btn.setStyleSheet(STEPPER_BTN_STYLE)
+        self.plus_btn.setStyleSheet(btn_style)
         self.plus_btn.clicked.connect(self._increment)
 
         layout.addWidget(self.minus_btn)
         layout.addWidget(self.display_label)
         layout.addWidget(self.plus_btn)
-        layout.addStretch()
+        if not compact:
+            layout.addStretch()
 
         self._update_display()
 
@@ -293,9 +408,13 @@ class StepperSpinBox(QWidget):
         if not enabled:
             self.minus_btn.setEnabled(False)
             self.plus_btn.setEnabled(False)
-            self.display_label.setStyleSheet(STEPPER_LABEL_STYLE_DISABLED)
+            self.display_label.setStyleSheet(
+                STEPPER_LABEL_COMPACT_DISABLED if self._compact else STEPPER_LABEL_STYLE_DISABLED
+            )
         else:
-            self.display_label.setStyleSheet(STEPPER_LABEL_STYLE_ENABLED)
+            self.display_label.setStyleSheet(
+                STEPPER_LABEL_COMPACT_ENABLED if self._compact else STEPPER_LABEL_STYLE_ENABLED
+            )
             self._update_display()
 
 

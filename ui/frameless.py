@@ -59,12 +59,12 @@ class WindowButton(QPushButton):
         # Hover background & glow
         if self._hovered:
             if self.kind == "close":
-                bg_color = QColor("#ef4444") if self._pressed else QColor(239, 68, 68, 210)
-                border_color = QColor(248, 113, 113, 200)
+                bg_color = QColor(185, 75, 75) if self._pressed else QColor(185, 75, 75, 190)
+                border_color = QColor(210, 105, 105, 170)
                 glyph_color = QColor("#ffffff")
             else:
-                bg_color = QColor("#2563eb") if self._pressed else QColor(37, 99, 235, 180)
-                border_color = QColor(96, 165, 250, 180)
+                bg_color = QColor(45, 85, 120) if self._pressed else QColor(45, 85, 120, 180)
+                border_color = QColor(70, 115, 155, 160)
                 glyph_color = QColor("#ffffff")
 
             painter.setBrush(bg_color)

@@ -41,15 +41,17 @@ class ProfileDialog(FramelessDialogBase):
         save_btn.clicked.connect(self._on_save)
         save_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);
-                color: #ffffff;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
+                color: #e2e8f0;
                 font-weight: bold;
-                border: none;
+                border: 1px solid #376388;
                 border-radius: 6px;
                 padding: 7px 20px;
             }
             QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #38bdf8, stop:1 #3b82f6);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
+                border-color: #4578a3;
+                color: #ffffff;
             }
         """)
         btn_layout.addWidget(save_btn)

@@ -99,6 +99,7 @@ class ConfigManager:
 
         self.config_file = self.config_dir / "config.json"
         self.active_profile: str = self.DEFAULT_PROFILE_NAME
+        self.default_profile: str = self.DEFAULT_PROFILE_NAME
         self.countdown_seconds: int = 5
         self.enable_countdown: bool = True
         self.countdown_autostart_only: bool = True
@@ -111,6 +112,7 @@ class ConfigManager:
     def get_default_config(self) -> Dict[str, Any]:
         return {
             "active_profile": self.DEFAULT_PROFILE_NAME,
+            "default_profile": self.DEFAULT_PROFILE_NAME,
             "countdown_seconds": 5,
             "enable_countdown": True,
             "countdown_autostart_only": True,
@@ -139,6 +141,7 @@ class ConfigManager:
 
     def _apply_dict(self, data: Dict[str, Any]) -> None:
         self.active_profile = str(data.get("active_profile", self.DEFAULT_PROFILE_NAME))
+        self.default_profile = str(data.get("default_profile", data.get("active_profile", self.DEFAULT_PROFILE_NAME)))
         self.countdown_seconds = max(0, int(data.get("countdown_seconds", 5)))
         self.enable_countdown = bool(data.get("enable_countdown", True))
         self.countdown_autostart_only = bool(data.get("countdown_autostart_only", True))
@@ -158,11 +161,15 @@ class ConfigManager:
         if self.active_profile not in self.profiles:
             self.active_profile = next(iter(self.profiles.keys()))
 
+        if self.default_profile not in self.profiles:
+            self.default_profile = self.active_profile if self.active_profile in self.profiles else next(iter(self.profiles.keys()))
+
     def save(self) -> None:
         """Saves current configuration to file."""
         self.config_dir.mkdir(parents=True, exist_ok=True)
         data = {
             "active_profile": self.active_profile,
+            "default_profile": self.default_profile,
             "countdown_seconds": self.countdown_seconds,
             "enable_countdown": self.enable_countdown,
             "countdown_autostart_only": self.countdown_autostart_only,
@@ -189,6 +196,14 @@ class ConfigManager:
             return True
         return False
 
+    def set_default_profile(self, name: str) -> bool:
+        clean_name = name.strip()
+        if clean_name in self.profiles:
+            self.default_profile = clean_name
+            self.save()
+            return True
+        return False
+
     def add_profile(self, name: str) -> bool:
         clean_name = name.strip()
         if not clean_name or clean_name in self.profiles:
@@ -203,6 +218,8 @@ class ConfigManager:
         del self.profiles[name]
         if self.active_profile == name:
             self.active_profile = next(iter(self.profiles.keys()))
+        if self.default_profile == name:
+            self.default_profile = self.active_profile
         self.save()
         return True
 
@@ -215,6 +232,8 @@ class ConfigManager:
         self.profiles[clean_name] = profile
         if self.active_profile == old_name:
             self.active_profile = clean_name
+        if self.default_profile == old_name:
+            self.default_profile = clean_name
         self.save()
         return True
 

@@ -119,9 +119,14 @@ class DesktopScanner:
 
         return dirs
 
+    _cached_apps: Optional[List[DesktopAppInfo]] = None
+
     @classmethod
-    def scan_all(cls, include_no_display: bool = False) -> List[DesktopAppInfo]:
-        """Scans all desktop directories and returns sorted list of applications."""
+    def scan_all(cls, include_no_display: bool = False, force_refresh: bool = False) -> List[DesktopAppInfo]:
+        """Scans all desktop directories and returns sorted list of applications (cached in-memory)."""
+        if not include_no_display and not force_refresh and cls._cached_apps is not None:
+            return cls._cached_apps
+
         seen_ids = set()
         apps: List[DesktopAppInfo] = []
 
@@ -148,6 +153,8 @@ class DesktopScanner:
 
         # Sort alphabetically by display name (case-insensitive)
         apps.sort(key=lambda a: a.name.lower())
+        if not include_no_display:
+            cls._cached_apps = apps
         return apps
 
     @classmethod

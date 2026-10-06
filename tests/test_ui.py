@@ -106,4 +106,93 @@ class TestMainWindowShortcuts(unittest.TestCase):
         dlg.close()
         win.close()
 
+    def test_app_dialog_add_and_close_workflow(self):
+        from ui.app_dialog import AppDialog
+        from config import AppEntry
 
+        added_apps = []
+        dlg = AppDialog(on_app_added=lambda app: added_apps.append(app))
+        dlg.show()
+        self.assertEqual(dlg.add_btn.text(), "Add")
+        self.assertEqual(dlg.close_btn.text(), "Close")
+
+        # Simulate adding an application
+        dlg.name_input.setText("App One")
+        dlg.cmd_input.setText("app-one")
+        dlg.add_btn.click()
+
+        self.assertEqual(len(added_apps), 1)
+        self.assertEqual(added_apps[0].name, "App One")
+        self.assertTrue(dlg.feedback_label.isVisible())
+        self.assertIn("1 added", dlg.feedback_label.text())
+
+        # Simulate adding a second application
+        dlg.name_input.setText("App Two")
+        dlg.cmd_input.setText("app-two")
+        dlg.add_btn.click()
+
+        self.assertEqual(len(added_apps), 2)
+        self.assertEqual(added_apps[1].name, "App Two")
+        self.assertIn("2 added", dlg.feedback_label.text())
+
+        # Simulate closing
+        dlg.close_btn.click()
+        self.assertFalse(dlg.isVisible())
+
+        # Verify Edit Mode uses Cancel and Save
+        existing = AppEntry(name="Existing App", command="existing-cmd")
+        edit_dlg = AppDialog(app_entry=existing)
+        self.assertEqual(edit_dlg.cancel_btn.text(), "Cancel")
+        self.assertEqual(edit_dlg.save_btn.text(), "Save")
+        edit_dlg.close()
+
+    def test_default_profile_ui_workflow(self):
+        from ui.settings_dialog import SettingsDialog
+
+        self.cfg.add_profile("Work")
+        win = MainWindow(self.cfg, autostart_mode=False)
+        win.show()
+
+        # Initially "Default" is default profile and active profile
+        self.assertEqual(self.cfg.default_profile, "Default")
+        self.assertEqual(win.set_default_btn.text(), "Default")
+        self.assertFalse(win.set_default_btn.isEnabled())
+        self.assertIn("Default (Default)", win.profile_combo.currentText())
+
+        # Switch to "Work" profile
+        work_idx = win.profile_combo.findData("Work")
+        self.assertGreaterEqual(work_idx, 0)
+        win.profile_combo.setCurrentIndex(work_idx)
+
+        self.assertEqual(self.cfg.active_profile, "Work")
+        self.assertEqual(win.set_default_btn.text(), "Set Default")
+        self.assertTrue(win.set_default_btn.isEnabled())
+
+        # Click Set Default button
+        win.set_default_btn.click()
+        self.assertEqual(self.cfg.default_profile, "Work")
+        self.assertEqual(win.set_default_btn.text(), "Default")
+        self.assertFalse(win.set_default_btn.isEnabled())
+        self.assertIn("Work (Default)", win.profile_combo.currentText())
+
+        # Verify SettingsDialog shows default profile combo
+        settings_dlg = SettingsDialog(self.cfg, win)
+        self.assertEqual(settings_dlg.default_profile_combo.currentText(), "Work")
+        def_idx = settings_dlg.default_profile_combo.findText("Default")
+        settings_dlg.default_profile_combo.setCurrentIndex(def_idx)
+        settings_dlg._on_save()
+        self.assertEqual(self.cfg.default_profile, "Default")
+
+        settings_dlg.close()
+        win.close()
+
+    def test_app_dialog_two_column_table(self):
+        from ui.app_dialog import AppDialog
+        dlg = AppDialog()
+        self.assertEqual(dlg.app_list_widget.columnCount(), 2)
+        self.assertGreater(dlg.app_list_widget.count(), 0)
+        # Verify first item is custom command
+        item_0_0 = dlg.app_list_widget.item(0, 0)
+        self.assertIsNotNone(item_0_0)
+        self.assertIn("Custom Command", item_0_0.text())
+        dlg.close()

@@ -8,15 +8,16 @@ Provides a modern, high-efficiency two-pane picker:
 - Clean dedicated edit mode when modifying an existing application.
 """
 
+import uuid
 from pathlib import Path
 from typing import Callable, List, Optional
 
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
-    QButtonGroup, QCheckBox, QFileDialog, QFormLayout, QFrame,
-    QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMessageBox, QPushButton, QVBoxLayout, QWidget
+    QAbstractItemView, QButtonGroup, QCheckBox, QFileDialog, QFrame,
+    QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMessageBox, QPushButton,
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 )
 
 from config import AppEntry
@@ -24,6 +25,60 @@ from desktop_scanner import DesktopAppInfo, DesktopScanner
 from ui.frameless import FramelessDialogBase
 from ui.icon_utils import resolve_icon
 from ui.widgets import FlowLayout, StepperSpinBox
+
+
+class TwoColumnAppTableWidget(QTableWidget):
+    """Rigid two-column grid table for application picker with automatic text elision."""
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.setColumnCount(2)
+        self.horizontalHeader().setVisible(False)
+        self.verticalHeader().setVisible(False)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.verticalHeader().setDefaultSectionSize(36)
+        self.setShowGrid(False)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+        self.setIconSize(QSize(26, 26))
+        self.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #1e293b;
+                border-radius: 8px;
+                background-color: #0d1322;
+                padding: 3px;
+                outline: none;
+            }
+            QTableWidget::item {
+                border: 1px solid transparent;
+                border-radius: 5px;
+                padding: 3px 8px;
+                margin: 1px;
+                color: #e2e8f0;
+                background: transparent;
+            }
+            QTableWidget::item:hover {
+                background-color: #17233c;
+                border-color: #28354f;
+            }
+            QTableWidget::item:selected {
+                background-color: #1b2f4a;
+                border-color: #37597a;
+                color: #ffffff;
+            }
+        """)
+
+    def count(self) -> int:
+        """Returns total valid items in table."""
+        total = 0
+        for r in range(self.rowCount()):
+            for c in range(2):
+                item = self.item(r, c)
+                if item is not None and item.data(Qt.ItemDataRole.UserRole) is not None:
+                    total += 1
+        return total
 
 
 class AppDialog(FramelessDialogBase):
@@ -38,7 +93,6 @@ class AppDialog(FramelessDialogBase):
         ("Utilities", ["Utility", "System", "Settings", "FileManager", "FileTools", "Archiving", "Compression"]),
         ("Media", ["AudioVideo", "Audio", "Video", "Player", "Recorder", "Graphics"]),
         ("Games", ["Game", "Emulator"]),
-        ("Custom Command", "CUSTOM"),
     ]
 
     def __init__(
@@ -60,8 +114,8 @@ class AppDialog(FramelessDialogBase):
         self.is_custom_mode: bool = False
         self.added_count: int = 0
 
-        self.setMinimumSize(640, 480)
-        self.resize(760, 520)
+        self.setMinimumSize(640, 540)
+        self.resize(740, 620)
 
         self._init_ui()
         self._load_scanned_apps()
@@ -71,19 +125,13 @@ class AppDialog(FramelessDialogBase):
         else:
             # Select first application by default
             if self.app_list_widget.count() > 0:
-                self.app_list_widget.setCurrentRow(0)
+                self.app_list_widget.setCurrentCell(0, 0)
 
     def _init_ui(self) -> None:
         main_layout = self.content_layout
-        main_layout.setSpacing(12)
+        main_layout.setSpacing(10)
 
-        content_container = QHBoxLayout()
-        content_container.setSpacing(14)
-
-        # ----------------- LEFT PANE: Search, Categories, App List -----------------
-        left_pane = QVBoxLayout()
-        left_pane.setSpacing(8)
-
+        # ----------------- TOP AREA: Search, Categories, Full-Width App List -----------------
         # Search box with clear button
         search_box = QHBoxLayout()
         search_box.setSpacing(6)
@@ -102,12 +150,12 @@ class AppDialog(FramelessDialogBase):
                 font-size: 13px;
             }
             QLineEdit:focus {
-                border-color: #38bdf8;
+                border-color: #4a6d8c;
                 background-color: #141d30;
             }
         """)
         search_box.addWidget(self.search_input)
-        left_pane.addLayout(search_box)
+        main_layout.addLayout(search_box)
 
         # Category Chips (FlowLayout wrapped so all categories are immediately visible)
         category_container = QWidget()
@@ -131,9 +179,9 @@ class AppDialog(FramelessDialogBase):
                 color: #ffffff;
             }
             QPushButton:checked {
-                background-color: rgba(56, 189, 248, 0.2);
-                border-color: #38bdf8;
-                color: #38bdf8;
+                background-color: rgba(70, 115, 150, 0.2);
+                border-color: #4a6d8c;
+                color: #6297bf;
                 font-weight: bold;
             }
         """
@@ -148,71 +196,39 @@ class AppDialog(FramelessDialogBase):
             self.category_group.addButton(btn, idx)
             category_layout.addWidget(btn)
 
-        left_pane.addWidget(category_container)
+        main_layout.addWidget(category_container)
 
-        # Application List
-        self.app_list_widget = QListWidget()
-        self.app_list_widget.setIconSize(QSize(28, 28))
-        self.app_list_widget.setSpacing(1)
-        self.app_list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.app_list_widget.setTextElideMode(Qt.TextElideMode.ElideRight)
-        self.app_list_widget.setStyleSheet("""
-            QListWidget {
-                border: 1px solid #1e293b;
-                border-radius: 8px;
-                background-color: #0d1322;
-                padding: 2px;
-                outline: none;
-            }
-            QListWidget::item {
-                border: 1px solid transparent;
-                border-radius: 5px;
-                padding: 3px 8px;
-                margin: 0px;
-                color: #e2e8f0;
-                background: transparent;
-                height: 32px;
-            }
-            QListWidget::item:hover {
-                background-color: #17233c;
-                border-color: #28354f;
-            }
-            QListWidget::item:selected {
-                background-color: #1e3a8a;
-                border-color: #3b82f6;
-                color: #ffffff;
-            }
-        """)
+        # 2-Column Application Table Widget
+        self.app_list_widget = TwoColumnAppTableWidget()
         self.app_list_widget.itemSelectionChanged.connect(self._on_app_selected)
         self.app_list_widget.itemDoubleClicked.connect(self._on_app_double_clicked)
-        left_pane.addWidget(self.app_list_widget, stretch=1)
+        main_layout.addWidget(self.app_list_widget, stretch=1)
 
         # Summary label
         self.list_summary_label = QLabel("Loading applications...")
         self.list_summary_label.setStyleSheet("color: #64748b; font-size: 11px;")
-        left_pane.addWidget(self.list_summary_label)
+        main_layout.addWidget(self.list_summary_label)
 
-        content_container.addLayout(left_pane, stretch=5)
-
-        # ----------------- RIGHT PANE: Inspector & Configuration -----------------
-        right_frame = QFrame()
-        right_frame.setStyleSheet("""
+        # ----------------- BOTTOM AREA: Inspector & Configuration -----------------
+        self.inspector_frame = QFrame()
+        self.inspector_frame.setStyleSheet("""
             QFrame {
                 background-color: #111827;
                 border: 1px solid #1f2b42;
                 border-radius: 10px;
             }
         """)
-        right_layout = QVBoxLayout(right_frame)
-        right_layout.setContentsMargins(16, 14, 16, 14)
-        right_layout.setSpacing(12)
+        inspector_layout = QVBoxLayout(self.inspector_frame)
+        inspector_layout.setContentsMargins(14, 10, 14, 10)
+        inspector_layout.setSpacing(8)
 
-        # Large Header Card Preview
+        # Selected App Preview Header (Horizontal)
         header_card = QHBoxLayout()
-        header_card.setSpacing(12)
+        header_card.setSpacing(10)
+        header_card.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         self.preview_icon_label = QLabel()
-        self.preview_icon_label.setFixedSize(52, 52)
+        self.preview_icon_label.setFixedSize(40, 40)
         self.preview_icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_icon_label.setStyleSheet("""
             QLabel {
@@ -236,118 +252,190 @@ class AppDialog(FramelessDialogBase):
         header_text_layout.addWidget(self.preview_desc_label)
 
         header_card.addLayout(header_text_layout, stretch=1)
-        right_layout.addLayout(header_card)
+        inspector_layout.addLayout(header_card)
 
         # Divider
         divider = QFrame()
         divider.setFrameShape(QFrame.Shape.HLine)
         divider.setStyleSheet("background-color: #1e293b; max-height: 1px; border: none;")
-        right_layout.addWidget(divider)
+        inspector_layout.addWidget(divider)
 
-        # Settings Form
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
+        # Row 1: Display Name + Startup Delay (compact) + Checkboxes
+        row1_layout = QHBoxLayout()
+        row1_layout.setSpacing(10)
+        row1_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
+        name_lbl = QLabel("Display Name:")
+        name_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Display name")
-        form_layout.addRow("Display Name:", self.name_input)
+        self.name_input.setFixedHeight(30)
+        self.name_input.setStyleSheet("""
+            QLineEdit {
+                background-color: #0b0f19;
+                color: #f8fafc;
+                border: 1px solid #28354f;
+                border-radius: 6px;
+                padding: 4px 10px;
+                font-size: 12px;
+            }
+            QLineEdit:focus {
+                border-color: #4a6d8c;
+            }
+        """)
+        row1_layout.addWidget(name_lbl)
+        row1_layout.addWidget(self.name_input, stretch=3)
 
+        delay_lbl = QLabel("Delay:")
+        delay_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
+        self.delay_spin = StepperSpinBox(minimum=0, maximum=300, value=0, suffix="s", step=1, compact=True)
+        row1_layout.addWidget(delay_lbl)
+        row1_layout.addWidget(self.delay_spin)
+
+        self.minimized_check = QCheckBox("Start min")
+        self.minimized_check.setChecked(False)
+        self.minimized_check.setStyleSheet("border: none; background: transparent;")
+        row1_layout.addWidget(self.minimized_check)
+
+        self.enabled_check = QCheckBox("Enabled")
+        self.enabled_check.setChecked(True)
+        self.enabled_check.setStyleSheet("border: none; background: transparent;")
+        row1_layout.addWidget(self.enabled_check)
+
+        inspector_layout.addLayout(row1_layout)
+
+        # Row 2: Full-Width Command / Exec
+        row2_layout = QHBoxLayout()
+        row2_layout.setSpacing(10)
+        row2_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        cmd_lbl = QLabel("Command / Exec:")
+        cmd_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
         self.cmd_input = QLineEdit()
         self.cmd_input.setPlaceholderText("Command to execute")
-        form_layout.addRow("Command / Exec:", self.cmd_input)
+        self.cmd_input.setFixedHeight(32)
+        self.cmd_input.setStyleSheet("""
+            QLineEdit {
+                background-color: #0b0f19;
+                color: #f8fafc;
+                border: 1px solid #28354f;
+                border-radius: 6px;
+                padding: 4px 10px;
+                font-size: 12px;
+            }
+            QLineEdit:focus {
+                border-color: #4a6d8c;
+            }
+        """)
+        row2_layout.addWidget(cmd_lbl)
+        row2_layout.addWidget(self.cmd_input, stretch=1)
+        inspector_layout.addLayout(row2_layout)
 
-        # Custom Icon Row (visible for custom commands)
+        # Row 3: Custom Icon Row (visible for custom commands)
         self.icon_row_widget = QWidget()
+        self.icon_row_widget.setStyleSheet("border: none; background: transparent;")
         icon_row_layout = QHBoxLayout(self.icon_row_widget)
         icon_row_layout.setContentsMargins(0, 0, 0, 0)
-        icon_row_layout.setSpacing(6)
+        icon_row_layout.setSpacing(10)
+        icon_lbl = QLabel("Custom Icon:")
+        icon_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; font-weight: 500; border: none; background: transparent;")
         self.custom_icon_input = QLineEdit()
-        self.custom_icon_input.setPlaceholderText("Icon name or image path")
+        self.custom_icon_input.setPlaceholderText("Icon name or image path (.png, .svg)")
+        self.custom_icon_input.setFixedHeight(30)
+        self.custom_icon_input.setStyleSheet("""
+            QLineEdit {
+                background-color: #0b0f19;
+                color: #f8fafc;
+                border: 1px solid #28354f;
+                border-radius: 6px;
+                padding: 4px 10px;
+                font-size: 12px;
+            }
+            QLineEdit:focus {
+                border-color: #4a6d8c;
+            }
+        """)
         self.custom_icon_input.textChanged.connect(self._on_custom_icon_text_changed)
         browse_icon_btn = QPushButton("Browse...")
+        browse_icon_btn.setFixedHeight(30)
         browse_icon_btn.clicked.connect(self._browse_custom_icon)
-        icon_row_layout.addWidget(self.custom_icon_input)
+        icon_row_layout.addWidget(icon_lbl)
+        icon_row_layout.addWidget(self.custom_icon_input, stretch=1)
         icon_row_layout.addWidget(browse_icon_btn)
-        form_layout.addRow("Icon:", self.icon_row_widget)
+        inspector_layout.addWidget(self.icon_row_widget)
         self.icon_row_widget.hide()
 
-        self.delay_spin = StepperSpinBox(minimum=0, maximum=300, value=0, suffix=" seconds", step=1)
-        form_layout.addRow("Startup Delay:", self.delay_spin)
-
-        self.minimized_check = QCheckBox("Start minimized to taskbar")
-        self.minimized_check.setChecked(False)
-        form_layout.addRow("", self.minimized_check)
-
-        self.enabled_check = QCheckBox("Enabled for launch")
-        self.enabled_check.setChecked(True)
-        form_layout.addRow("", self.enabled_check)
-
-        right_layout.addLayout(form_layout)
-        right_layout.addStretch()
-
-        # Added toast/badge feedback label
-        self.feedback_label = QLabel()
-        self.feedback_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.feedback_label.setStyleSheet("color: #34d399; font-size: 11px; font-weight: bold; border: none;")
-        self.feedback_label.hide()
-        right_layout.addWidget(self.feedback_label)
-
-        content_container.addWidget(right_frame, stretch=4)
-        main_layout.addLayout(content_container, stretch=1)
+        main_layout.addWidget(self.inspector_frame)
 
         # ----------------- BOTTOM DIALOG ACTIONS -----------------
         btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(8)
+        btn_layout.setSpacing(10)
 
-        if not self.is_edit_mode:
-            # Multi-add batch button
-            self.add_another_btn = QPushButton("+ Add to Profile")
-            self.add_another_btn.setFixedHeight(34)
-            self.add_another_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #1e293b;
-                    color: #38bdf8;
-                    border: 1px solid rgba(56, 189, 248, 0.4);
-                    border-radius: 6px;
-                    font-weight: bold;
-                    padding: 0 16px;
-                }
-                QPushButton:hover {
-                    background-color: rgba(56, 189, 248, 0.15);
-                    border-color: #38bdf8;
-                    color: #ffffff;
-                }
-            """)
-            self.add_another_btn.setToolTip("Adds this application to your profile without closing this picker")
-            self.add_another_btn.clicked.connect(self._on_add_to_profile_only)
-            btn_layout.addWidget(self.add_another_btn)
+        # Inline feedback label on the bottom left
+        self.feedback_label = QLabel()
+        self.feedback_label.setStyleSheet("color: #6297bf; font-size: 12px; font-weight: 600; border: none; background: transparent;")
+        self.feedback_label.hide()
+        btn_layout.addWidget(self.feedback_label)
 
         btn_layout.addStretch()
 
-        self.cancel_btn = QPushButton("Done" if not self.is_edit_mode else "Cancel")
-        self.cancel_btn.setFixedHeight(34)
-        self.cancel_btn.clicked.connect(self._on_close_clicked)
-        btn_layout.addWidget(self.cancel_btn)
+        if self.is_edit_mode:
+            self.save_btn = QPushButton("Save")
+            self.save_btn.setFixedHeight(34)
+            self.save_btn.setDefault(True)
+            self.save_btn.clicked.connect(self._on_save_and_close)
+            self.save_btn.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
+                    color: #e2e8f0;
+                    font-weight: bold;
+                    border: 1px solid #376388;
+                    border-radius: 6px;
+                    padding: 0 24px;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
+                    border-color: #4578a3;
+                    color: #ffffff;
+                }
+            """)
+            btn_layout.addWidget(self.save_btn)
 
-        save_btn_text = "Save Changes" if self.is_edit_mode else "Add and Close"
-        self.save_btn = QPushButton(save_btn_text)
-        self.save_btn.setFixedHeight(34)
-        self.save_btn.setDefault(True)
-        self.save_btn.clicked.connect(self._on_save_and_close)
-        self.save_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);
-                color: #ffffff;
-                font-weight: bold;
-                border: none;
-                border-radius: 6px;
-                padding: 0 20px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #38bdf8, stop:1 #3b82f6);
-            }
-        """)
-        btn_layout.addWidget(self.save_btn)
+            self.cancel_btn = QPushButton("Cancel")
+            self.cancel_btn.setFixedHeight(34)
+            self.cancel_btn.clicked.connect(self.reject)
+            btn_layout.addWidget(self.cancel_btn)
+        else:
+            self.add_btn = QPushButton("Add")
+            self.add_btn.setFixedHeight(34)
+            self.add_btn.setDefault(True)
+            self.add_btn.clicked.connect(self._on_add_clicked)
+            self.add_btn.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
+                    color: #e2e8f0;
+                    font-weight: bold;
+                    border: 1px solid #376388;
+                    border-radius: 6px;
+                    padding: 0 26px;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
+                    border-color: #4578a3;
+                    color: #ffffff;
+                }
+            """)
+            btn_layout.addWidget(self.add_btn)
+
+            self.close_btn = QPushButton("Close")
+            self.close_btn.setFixedHeight(34)
+            self.close_btn.clicked.connect(self._on_close_clicked)
+            btn_layout.addWidget(self.close_btn)
+
+            # Compatibility aliases
+            self.cancel_btn = self.close_btn
+            self.save_btn = self.add_btn
+
         main_layout.addLayout(btn_layout)
 
     def _load_scanned_apps(self) -> None:
@@ -356,49 +444,44 @@ class AppDialog(FramelessDialogBase):
 
     def _populate_list(self, apps: List[DesktopAppInfo]) -> None:
         self.app_list_widget.clear()
+        total_items = 1 + len(apps)
+        rows = (total_items + 1) // 2
+        self.app_list_widget.setRowCount(rows)
 
-        # Add top item: Custom Command / Script
-        custom_item = QListWidgetItem()
+        # Add top item: Custom Command / Script at cell (0, 0)
+        custom_item = QTableWidgetItem("+ Custom Command / Shell Script")
         custom_item.setIcon(resolve_icon("utilities-terminal", ""))
-        custom_item.setText("+ Custom Command / Shell Script")
+        custom_item.setToolTip("Create a custom command or shell script entry")
         custom_item.setData(Qt.ItemDataRole.UserRole, "CUSTOM")
-        self.app_list_widget.addItem(custom_item)
+        custom_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+        self.app_list_widget.setItem(0, 0, custom_item)
 
-        for app in apps:
-            item = QListWidgetItem()
+        for idx, app in enumerate(apps):
+            pos = idx + 1
+            r = pos // 2
+            c = pos % 2
+
+            item = QTableWidgetItem(app.name.strip())
             icon = resolve_icon(app.icon_name, app.icon_path)
             item.setIcon(icon)
-            
-            # Clean display label: keep item text focused on application name, full details in tooltip
-            display_name = app.name.strip()
-            if app.generic_name and app.generic_name.lower() not in display_name.lower():
-                display_text = f"{display_name} ({app.generic_name})"
-            else:
-                display_text = display_name
-            
-            # Truncate text cleanly if exceedingly long
-            if len(display_text) > 34:
-                truncated_text = display_text[:32] + "..."
-            else:
-                truncated_text = display_text
 
-            item.setText(truncated_text)
-            item.setToolTip(f"{app.name}\n{app.generic_name or app.comment or app.clean_command}")
+            tooltip_lines = [app.name]
+            if app.generic_name:
+                tooltip_lines.append(f"Category: {app.generic_name}")
+            if app.comment:
+                tooltip_lines.append(f"Description: {app.comment}")
+            if app.clean_command:
+                tooltip_lines.append(f"Command: {app.clean_command}")
+            item.setToolTip("\n".join(tooltip_lines))
+
             item.setData(Qt.ItemDataRole.UserRole, app)
-            self.app_list_widget.addItem(item)
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            self.app_list_widget.setItem(r, c, item)
 
         count = len(apps)
         self.list_summary_label.setText(f"{count} application{'s' if count != 1 else ''} available")
 
     def _on_category_clicked(self, category_filter) -> None:
-        if category_filter == "CUSTOM":
-            self.is_custom_mode = True
-            self.current_category_filter = None
-            self._filter_list()
-            # Select the custom item directly
-            self.app_list_widget.setCurrentRow(0)
-            return
-
         self.is_custom_mode = False
         self.current_category_filter = category_filter
         self._filter_list()
@@ -431,6 +514,8 @@ class AppDialog(FramelessDialogBase):
             return
 
         data = selected_items[0].data(Qt.ItemDataRole.UserRole)
+        if not data:
+            return
 
         if data == "CUSTOM":
             self._set_custom_mode()
@@ -500,14 +585,20 @@ class AppDialog(FramelessDialogBase):
             self.is_custom_mode = False
             self.icon_row_widget.hide()
             # Match item in list if possible
-            for i in range(self.app_list_widget.count()):
-                item = self.app_list_widget.item(i)
-                data = item.data(Qt.ItemDataRole.UserRole)
-                if isinstance(data, DesktopAppInfo):
-                    if data.desktop_file == entry.desktop_file or data.desktop_id == entry.desktop_file:
-                        self.app_list_widget.setCurrentItem(item)
-                        self.selected_scanner_app = data
-                        break
+            matched = False
+            for r in range(self.app_list_widget.rowCount()):
+                for c in range(2):
+                    item = self.app_list_widget.item(r, c)
+                    if item:
+                        data = item.data(Qt.ItemDataRole.UserRole)
+                        if isinstance(data, DesktopAppInfo):
+                            if data.desktop_file == entry.desktop_file or data.desktop_id == entry.desktop_file:
+                                self.app_list_widget.setCurrentItem(item)
+                                self.selected_scanner_app = data
+                                matched = True
+                                break
+                if matched:
+                    break
         else:
             self._set_custom_mode()
             self.custom_icon_input.setText(entry.icon)
@@ -529,7 +620,7 @@ class AppDialog(FramelessDialogBase):
                 return None
             icon = self.custom_icon_input.text().strip()
             desktop_file = ""
-            entry_id = self.existing_entry.id if self.existing_entry else ""
+            entry_id = self.existing_entry.id if self.existing_entry else str(uuid.uuid4())
         else:
             if self.selected_scanner_app:
                 desktop_file = self.selected_scanner_app.desktop_file
@@ -547,7 +638,7 @@ class AppDialog(FramelessDialogBase):
                 QMessageBox.warning(self, "Validation Error", "Please select an application or specify a command.")
                 return None
 
-            entry_id = self.existing_entry.id if self.existing_entry else (Path(desktop_file).name if desktop_file else "")
+            entry_id = self.existing_entry.id if self.existing_entry else str(uuid.uuid4())
 
         return AppEntry(
             id=entry_id or "",
@@ -560,21 +651,25 @@ class AppDialog(FramelessDialogBase):
             start_minimized=minimized,
         )
 
-    def _on_add_to_profile_only(self) -> None:
-        """Adds current configuration to the profile, updates feedback, and remains open."""
+    def _on_add_clicked(self) -> None:
+        """Adds current configuration to the profile, updates feedback, and remains open to add more."""
         entry = self._create_app_entry_from_form()
         if not entry:
             return
 
         self.added_count += 1
+        self.result_entry = entry
         self.app_added.emit(entry)
         if self.on_app_added_callback:
             self.on_app_added_callback(entry)
 
-        # Show brief confirmation message in dialog
-        self.feedback_label.setText(f"Added '{entry.name}' to profile! ({self.added_count} added)")
+        count_text = f"{self.added_count} added" if self.added_count > 1 else "1 added"
+        self.feedback_label.setText(f"Added '{entry.name}' ({count_text})")
         self.feedback_label.show()
-        self.cancel_btn.setText("Close")
+
+    def _on_add_to_profile_only(self) -> None:
+        """Compatibility wrapper for batch adding without closing."""
+        self._on_add_clicked()
 
     def _on_save_and_close(self) -> None:
         """Saves current entry and closes dialog."""
@@ -589,11 +684,17 @@ class AppDialog(FramelessDialogBase):
 
         self.accept()
 
-    def _on_app_double_clicked(self, item: QListWidgetItem) -> None:
-        """Double clicking an application immediately adds it and closes."""
-        self._on_save_and_close()
+    def _on_app_double_clicked(self, item: QTableWidgetItem) -> None:
+        """Double clicking an application adds it in add mode, or saves in edit mode."""
+        if not item or not item.data(Qt.ItemDataRole.UserRole):
+            return
+        if self.is_edit_mode:
+            self._on_save_and_close()
+        else:
+            self._on_add_clicked()
 
     def _on_close_clicked(self) -> None:
+        """Closes the dialog."""
         if self.added_count > 0:
             self.accept()
         else:

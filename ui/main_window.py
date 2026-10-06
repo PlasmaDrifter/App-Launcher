@@ -42,20 +42,85 @@ MICRO_BTN_STYLE = """
 
 MICRO_DELETE_BTN_STYLE = """
     QPushButton {
-        background-color: rgba(239, 68, 68, 0.12);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.25);
+        background-color: rgba(185, 80, 80, 0.12);
+        color: #c97575;
+        border: 1px solid rgba(185, 80, 80, 0.25);
         border-radius: 5px;
         font-size: 13px;
         font-weight: bold;
         padding: 0px;
     }
     QPushButton:hover {
-        background-color: #ef4444;
-        color: #ffffff;
-        border-color: #ef4444;
+        background-color: rgba(185, 80, 80, 0.25);
+        color: #fca5a5;
+        border-color: #c97575;
     }
 """
+
+HEADER_BTN_STYLE = """
+    QPushButton {
+        background-color: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 4px 8px;
+    }
+    QPushButton:hover {
+        background-color: #334155;
+        border-color: #4b7094;
+        color: #ffffff;
+    }
+    QPushButton:disabled {
+        background-color: #1e293b;
+        color: #475569;
+        border-color: #334155;
+    }
+"""
+
+DEFAULT_BTN_ACTIVE_STYLE = """
+    QPushButton {
+        background-color: rgba(70, 115, 150, 0.15);
+        color: #6297bf;
+        border: 1px solid rgba(98, 151, 191, 0.5);
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 8px;
+    }
+    QPushButton:hover {
+        background-color: rgba(70, 115, 150, 0.25);
+        border-color: #6297bf;
+        color: #ffffff;
+    }
+    QPushButton:disabled {
+        background-color: rgba(70, 115, 150, 0.15);
+        color: #6297bf;
+        border: 1px solid rgba(98, 151, 191, 0.5);
+    }
+"""
+
+DELETE_HEADER_BTN_STYLE = """
+    QPushButton {
+        background-color: transparent;
+        color: #c97575;
+        border: 1px solid rgba(185, 80, 80, 0.3);
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 4px 8px;
+    }
+    QPushButton:hover {
+        background-color: rgba(185, 80, 80, 0.15);
+        border-color: #c97575;
+    }
+    QPushButton:disabled {
+        color: #475569;
+        border-color: #1e293b;
+    }
+"""
+
 
 
 class AppCardWidget(QFrame):
@@ -77,7 +142,7 @@ class AppCardWidget(QFrame):
             }
             QFrame#AppCard:hover {
                 background-color: #17233c;
-                border: 1px solid #38bdf8;
+                border: 1px solid #3f5673;
             }
         """)
 
@@ -116,13 +181,14 @@ class AppCardWidget(QFrame):
 
         # 3. Compact App Details
         details_layout = QVBoxLayout()
-        details_layout.setSpacing(2)
+        details_layout.setSpacing(0)
+        details_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         title_row = QHBoxLayout()
         title_row.setSpacing(6)
 
         name_label = ElidedLabel(self.app.name)
-        title_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Bold)
+        title_font = QFont("Inter, Segoe UI, sans-serif", 12, QFont.Weight.DemiBold)
         name_label.setFont(title_font)
         name_label.setStyleSheet("color: #f8fafc; background: transparent; border: none;")
         title_row.addWidget(name_label, stretch=1)
@@ -131,9 +197,9 @@ class AppCardWidget(QFrame):
         if self.app.delay_seconds > 0:
             delay_badge = BadgePill(
                 f"+{self.app.delay_seconds}s",
-                bg_color="rgba(16, 185, 129, 0.15)",
-                text_color="#34d399",
-                border_color="rgba(16, 185, 129, 0.35)"
+                bg_color="rgba(70, 130, 105, 0.15)",
+                text_color="#6eab8e",
+                border_color="rgba(70, 130, 105, 0.35)"
             )
             title_row.addWidget(delay_badge, stretch=0)
 
@@ -141,19 +207,14 @@ class AppCardWidget(QFrame):
         if self.app.start_minimized:
             min_badge = BadgePill(
                 "Min",
-                bg_color="rgba(99, 102, 241, 0.15)",
-                text_color="#818cf8",
-                border_color="rgba(99, 102, 241, 0.35)"
+                bg_color="rgba(100, 105, 155, 0.15)",
+                text_color="#8d94bc",
+                border_color="rgba(100, 105, 155, 0.35)"
             )
             title_row.addWidget(min_badge, stretch=0)
 
         title_row.addStretch(0)
         details_layout.addLayout(title_row)
-
-        subtitle_text = self.app.desktop_file or self.app.command
-        subtitle_label = ElidedLabel(subtitle_text)
-        subtitle_label.setStyleSheet("color: #64748b; font-size: 10px; background: transparent; border: none;")
-        details_layout.addWidget(subtitle_label)
 
         card_layout.addLayout(details_layout, stretch=1)
 
@@ -296,7 +357,7 @@ class MainWindow(QMainWindow):
         title_lbl.setFont(title_font)
         title_lbl.setStyleSheet("color: #f8fafc; border: none; background: transparent;")
 
-        version_lbl = QLabel("v0.1.3")
+        version_lbl = QLabel("v0.1.4")
         version_font = QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Normal)
         version_lbl.setFont(version_font)
         version_lbl.setStyleSheet("color: #64748b; border: none; background: transparent; padding-top: 4px;")
@@ -313,7 +374,7 @@ class MainWindow(QMainWindow):
 
         # Row 2: Profile Selector & Quick Actions
         row2 = QHBoxLayout()
-        row2.setSpacing(8)
+        row2.setSpacing(6)
 
         prof_lbl = QLabel("Profile:")
         prof_lbl.setStyleSheet("color: #94a3b8; font-size: 11px; font-weight: bold; border: none; background: transparent;")
@@ -322,63 +383,38 @@ class MainWindow(QMainWindow):
         self.profile_combo = QComboBox()
         self.profile_combo.setFixedHeight(28)
         self.profile_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
+        self.profile_combo.currentIndexChanged.connect(self._on_profile_index_changed)
         row2.addWidget(self.profile_combo)
 
-        btn_header_style = """
-            QPushButton {
-                background-color: #1e293b;
-                color: #e2e8f0;
-                border: 1px solid #334155;
-                border-radius: 5px;
-                font-size: 11px;
-                font-weight: 500;
-                padding: 4px 10px;
-            }
-            QPushButton:hover {
-                background-color: #334155;
-                border-color: #38bdf8;
-                color: #ffffff;
-            }
-        """
+        self.set_default_btn = QPushButton("Default")
+        self.set_default_btn.setFixedHeight(28)
+        self.set_default_btn.setStyleSheet(HEADER_BTN_STYLE)
+        self.set_default_btn.clicked.connect(self._on_set_default_profile)
+        row2.addWidget(self.set_default_btn)
 
         self.new_profile_btn = QPushButton("+ New")
         self.new_profile_btn.setFixedHeight(28)
-        self.new_profile_btn.setStyleSheet(btn_header_style)
+        self.new_profile_btn.setStyleSheet(HEADER_BTN_STYLE)
         self.new_profile_btn.setToolTip("Create a new profile")
         self.new_profile_btn.clicked.connect(self._on_new_profile)
         row2.addWidget(self.new_profile_btn)
 
         self.rename_profile_btn = QPushButton("Rename")
         self.rename_profile_btn.setFixedHeight(28)
-        self.rename_profile_btn.setStyleSheet(btn_header_style)
+        self.rename_profile_btn.setStyleSheet(HEADER_BTN_STYLE)
         self.rename_profile_btn.setToolTip("Rename active profile")
         self.rename_profile_btn.clicked.connect(self._on_rename_profile)
         row2.addWidget(self.rename_profile_btn)
 
         self.delete_profile_btn = QPushButton("Delete")
         self.delete_profile_btn.setFixedHeight(28)
-        self.delete_profile_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #f87171;
-                border: 1px solid rgba(239, 68, 68, 0.3);
-                border-radius: 5px;
-                font-size: 11px;
-                font-weight: 500;
-                padding: 4px 10px;
-            }
-            QPushButton:hover {
-                background-color: rgba(239, 68, 68, 0.15);
-                border-color: #ef4444;
-            }
-        """)
+        self.delete_profile_btn.setStyleSheet(DELETE_HEADER_BTN_STYLE)
         self.delete_profile_btn.setToolTip("Delete active profile")
         self.delete_profile_btn.clicked.connect(self._on_delete_profile)
         row2.addWidget(self.delete_profile_btn)
 
         self.settings_btn = QPushButton("Settings")
-        self.settings_btn.setStyleSheet(btn_header_style)
+        self.settings_btn.setStyleSheet(HEADER_BTN_STYLE)
         self.settings_btn.setFixedHeight(28)
         self.settings_btn.clicked.connect(self._on_open_settings)
         row2.addWidget(self.settings_btn)
@@ -437,14 +473,16 @@ class MainWindow(QMainWindow):
         add_first_btn.setFixedSize(180, 34)
         add_first_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284c7, stop:1 #2563eb);
-                color: #ffffff;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #255577, stop:1 #2d4f7c);
+                color: #e2e8f0;
                 font-weight: bold;
-                border: none;
+                border: 1px solid #376388;
                 border-radius: 6px;
             }
             QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #38bdf8, stop:1 #3b82f6);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e668f, stop:1 #375f94);
+                border-color: #4578a3;
+                color: #ffffff;
             }
         """)
         add_first_btn.clicked.connect(self._on_add_app)
@@ -473,7 +511,7 @@ class MainWindow(QMainWindow):
         countdown_header = QHBoxLayout()
         self.countdown_status_label = QLabel("Auto-launching in 5s...")
         self.countdown_status_label.setFont(QFont("Inter, Segoe UI, sans-serif", 10, QFont.Weight.Medium))
-        self.countdown_status_label.setStyleSheet("color: #38bdf8; border: none; background: transparent;")
+        self.countdown_status_label.setStyleSheet("color: #6297bf; border: none; background: transparent;")
         countdown_header.addWidget(self.countdown_status_label)
 
         countdown_header.addStretch()
@@ -504,7 +542,7 @@ class MainWindow(QMainWindow):
                 background-color: #0f172a;
             }
             QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #06b6d4, stop:1 #3b82f6);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #356787, stop:1 #3b5f8c);
                 border-radius: 3px;
             }
         """)
@@ -521,16 +559,16 @@ class MainWindow(QMainWindow):
         self.add_app_btn.setStyleSheet("""
             QPushButton {
                 background-color: #1e293b;
-                color: #38bdf8;
-                border: 1px solid rgba(56, 189, 248, 0.4);
+                color: #6297bf;
+                border: 1px solid rgba(98, 151, 191, 0.4);
                 border-radius: 6px;
                 font-weight: bold;
                 padding: 0 12px;
                 font-size: 12px;
             }
             QPushButton:hover {
-                background-color: rgba(56, 189, 248, 0.15);
-                border-color: #38bdf8;
+                background-color: rgba(70, 115, 150, 0.15);
+                border-color: #6297bf;
                 color: #ffffff;
             }
         """)
@@ -541,22 +579,22 @@ class MainWindow(QMainWindow):
         self.launch_now_btn.setFixedHeight(36)
         self.launch_now_btn.setStyleSheet("""
             QPushButton {
-                background-color: #1e3a34;
-                color: #6ee7b7;
-                border: 1px solid #059669;
+                background-color: #1b2f29;
+                color: #7ab89b;
+                border: 1px solid #2e5548;
                 border-radius: 6px;
                 font-weight: bold;
                 font-size: 12px;
                 padding: 0 14px;
             }
             QPushButton:hover {
-                background-color: #065f46;
-                color: #ffffff;
-                border-color: #10b981;
+                background-color: #244239;
+                color: #d1fae5;
+                border-color: #3f6e5e;
             }
             QPushButton:pressed {
-                background-color: #064e3b;
-                border-color: #059669;
+                background-color: #172a24;
+                border-color: #2e5548;
             }
         """)
         self.launch_now_btn.clicked.connect(self.launch_selected_apps)
@@ -661,20 +699,59 @@ class MainWindow(QMainWindow):
     def _load_profiles_combo(self) -> None:
         self.profile_combo.blockSignals(True)
         self.profile_combo.clear()
-        for name in sorted(self.config_manager.profiles.keys()):
-            self.profile_combo.addItem(name)
-        self.profile_combo.setCurrentText(self.config_manager.active_profile)
+        target_idx = 0
+        for idx, name in enumerate(sorted(self.config_manager.profiles.keys())):
+            display_name = f"{name} (Default)" if name == self.config_manager.default_profile else name
+            self.profile_combo.addItem(display_name, userData=name)
+            if name == self.config_manager.active_profile:
+                target_idx = idx
+        self.profile_combo.setCurrentIndex(target_idx)
         self.profile_combo.blockSignals(False)
         self._update_profile_buttons()
 
     def _update_profile_buttons(self) -> None:
         has_multiple = len(self.config_manager.profiles) > 1
         self.delete_profile_btn.setEnabled(has_multiple)
+        self._update_default_button()
 
-    def _on_profile_changed(self, profile_name: str) -> None:
+    def _update_default_button(self) -> None:
+        is_default = (self.config_manager.active_profile == self.config_manager.default_profile)
+        if is_default:
+            self.set_default_btn.setText("Default")
+            self.set_default_btn.setStyleSheet(DEFAULT_BTN_ACTIVE_STYLE)
+            self.set_default_btn.setToolTip("Currently the default startup profile")
+            self.set_default_btn.setEnabled(False)
+        else:
+            self.set_default_btn.setText("Set Default")
+            self.set_default_btn.setStyleSheet(HEADER_BTN_STYLE)
+            self.set_default_btn.setToolTip("Set active profile as default startup profile")
+            self.set_default_btn.setEnabled(True)
+
+    def _on_profile_index_changed(self, index: int) -> None:
+        if index < 0:
+            return
+        profile_name = self.profile_combo.itemData(index)
         if profile_name and profile_name in self.config_manager.profiles:
             self.config_manager.set_active_profile(profile_name)
             self._refresh_app_list()
+            self._update_profile_buttons()
+
+    def _on_profile_changed(self, profile_name: str) -> None:
+        """Fallback compatibility handler if invoked by text name."""
+        if not profile_name:
+            return
+        if profile_name.endswith(" (Default)") and profile_name not in self.config_manager.profiles:
+            profile_name = profile_name[:-10]
+        if profile_name in self.config_manager.profiles:
+            self.config_manager.set_active_profile(profile_name)
+            self._refresh_app_list()
+            self._update_profile_buttons()
+
+    def _on_set_default_profile(self) -> None:
+        self._pause_for_user_action()
+        active = self.config_manager.active_profile
+        if self.config_manager.set_default_profile(active):
+            self._load_profiles_combo()
 
     def _on_new_profile(self) -> None:
         self._pause_for_user_action()
@@ -721,6 +798,8 @@ class MainWindow(QMainWindow):
         self._pause_for_user_action()
         dialog = SettingsDialog(self.config_manager, self)
         if dialog.exec():
+            # Refresh profile combo and buttons in case startup profile changed in settings
+            self._load_profiles_combo()
             # If user checked/configured settings, don't suddenly start a race countdown.
             # Instead cancel active timer so user can review window, or reset countdown in paused state.
             if not self.config_manager.enable_countdown or self.config_manager.countdown_seconds <= 0:
@@ -738,6 +817,11 @@ class MainWindow(QMainWindow):
                 self.countdown_card.show()
 
     def _refresh_app_list(self) -> None:
+        for i in range(self.app_list_widget.count()):
+            item = self.app_list_widget.item(i)
+            widget = self.app_list_widget.itemWidget(item)
+            if widget is not None:
+                widget.deleteLater()
         self.app_list_widget.clear()
         profile = self.config_manager.get_current_profile()
 

@@ -38,8 +38,8 @@ def apply_dark_theme(app: QApplication) -> None:
     palette.setColor(QPalette.ColorRole.Button, QColor(49, 54, 59))
     palette.setColor(QPalette.ColorRole.ButtonText, QColor(239, 240, 241))
     palette.setColor(QPalette.ColorRole.BrightText, QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.Link, QColor(61, 174, 233))
-    palette.setColor(QPalette.ColorRole.Highlight, QColor(61, 174, 233))
+    palette.setColor(QPalette.ColorRole.Link, QColor(70, 125, 165))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(50, 95, 135))
     palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
     app.setPalette(palette)
 
@@ -52,6 +52,8 @@ def main() -> None:
     args = parser.parse_args()
 
     config_manager = ConfigManager()
+    if config_manager.default_profile in config_manager.profiles:
+        config_manager.active_profile = config_manager.default_profile
 
     if args.headless:
         profile = config_manager.get_current_profile()

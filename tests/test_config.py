@@ -105,6 +105,31 @@ class TestConfigManager(unittest.TestCase):
         self.assertFalse(mgr2.countdown_autostart_only)
         self.assertEqual(mgr2.countdown_seconds, 10)
 
+    def test_default_profile_lifecycle(self):
+        mgr = ConfigManager(self.config_dir)
+        self.assertEqual(mgr.default_profile, "Default")
+
+        # Add second profile and set it as default
+        self.assertTrue(mgr.add_profile("Work"))
+        self.assertTrue(mgr.set_default_profile("Work"))
+        self.assertEqual(mgr.default_profile, "Work")
+        self.assertFalse(mgr.set_default_profile("NonExistent"))
+
+        # Check persistence
+        mgr2 = ConfigManager(self.config_dir)
+        self.assertEqual(mgr2.default_profile, "Work")
+
+        # Rename default profile
+        self.assertTrue(mgr2.rename_profile("Work", "Office"))
+        self.assertEqual(mgr2.default_profile, "Office")
+
+        mgr3 = ConfigManager(self.config_dir)
+        self.assertEqual(mgr3.default_profile, "Office")
+
+        # Delete default profile falls back safely
+        self.assertTrue(mgr3.remove_profile("Office"))
+        self.assertEqual(mgr3.default_profile, "Default")
+
 
 if __name__ == "__main__":
     unittest.main()

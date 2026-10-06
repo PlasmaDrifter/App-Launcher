@@ -22,10 +22,10 @@ QWidget {
 QToolTip {
     background-color: #1e293b;
     color: #f8fafc;
-    border: 1px solid #38bdf8;
+    border: 1px solid #4a6d8c;
     border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 11px;
+    padding: 7px 9px;
+    font-size: 14px;
 }
 
 /* Scroll Area & List Widgets */
@@ -55,7 +55,7 @@ QListWidget::item:hover {
 }
 
 QListWidget::item:selected {
-    background-color: #2563eb;
+    background-color: #244366;
     color: #ffffff;
 }
 
@@ -113,7 +113,7 @@ QPushButton:hover {
 
 QPushButton:pressed {
     background-color: #0f172a;
-    border-color: #38bdf8;
+    border-color: #4a6d8c;
 }
 
 QPushButton:disabled {
@@ -129,12 +129,12 @@ QLineEdit, QSpinBox {
     border: 1px solid #28354f;
     border-radius: 6px;
     padding: 7px 12px;
-    selection-background-color: #2563eb;
+    selection-background-color: #244366;
 }
 
 QLineEdit:focus, QSpinBox:focus {
-    border: 1px solid #38bdf8;
-    background-color: #141d30;
+    border: 1px solid #4a6d8c;
+    background-color: #131a28;
 }
 
 /* Combo Boxes */
@@ -148,7 +148,7 @@ QComboBox {
 }
 
 QComboBox:hover {
-    border-color: #38bdf8;
+    border-color: #4a6d8c;
 }
 
 QComboBox::drop-down {
@@ -167,7 +167,7 @@ QComboBox::down-arrow {
 }
 
 QComboBox::down-arrow:hover {
-    border-top-color: #38bdf8;
+    border-top-color: #6297bf;
 }
 
 QComboBox QAbstractItemView {
@@ -176,7 +176,7 @@ QComboBox QAbstractItemView {
     border: 1px solid #1e293b;
     border-radius: 8px;
     padding: 4px;
-    selection-background-color: #2563eb;
+    selection-background-color: #244366;
     outline: none;
 }
 
@@ -201,9 +201,9 @@ QTabBar::tab:hover {
 }
 
 QTabBar::tab:selected {
-    color: #38bdf8;
+    color: #6297bf;
     font-weight: bold;
-    border-bottom: 2px solid #38bdf8;
+    border-bottom: 2px solid #6297bf;
 }
 
 /* Group Boxes */
@@ -224,7 +224,7 @@ QGroupBox::title {
     subcontrol-position: top left;
     left: 14px;
     padding: 0 6px;
-    color: #38bdf8;
+    color: #6297bf;
 }
 
 /* Checkboxes */
@@ -242,11 +242,11 @@ QCheckBox::indicator {
 }
 
 QCheckBox::indicator:hover {
-    border-color: #38bdf8;
+    border-color: #4a6d8c;
 }
 
 QCheckBox::indicator:checked {
-    background-color: #38bdf8;
-    border-color: #38bdf8;
+    background-color: #356082;
+    border-color: #4a6d8c;
 }
 """

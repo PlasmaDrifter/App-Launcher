@@ -110,8 +110,8 @@ class ToggleSwitch(QAbstractButton):
 
         # 0.0 = unchecked (left), 1.0 = checked (right)
         self._thumb_position = 1.0 if self.isChecked() else 0.0
-        self._active_color: QColor = QColor(42, 85, 120)
-        self._inactive_color: QColor = QColor(51, 65, 85)
+        self._active_color: QColor = QColor("#19945C")
+        self._inactive_color: QColor = QColor("#2f2f37")
 
         self._animation = QPropertyAnimation(self, b"thumb_position", self)
         self._animation.setDuration(160)

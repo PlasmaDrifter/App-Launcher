@@ -271,7 +271,7 @@ class AppCardWidget(QFrame):
         self.down_btn.setStyleSheet(build_micro_btn_stylesheet(theme))
         self.edit_btn.setStyleSheet(build_micro_btn_stylesheet(theme))
         self.delete_btn.setStyleSheet(build_micro_delete_btn_stylesheet(theme))
-        self.toggle.set_track_colors(QColor(theme.accent_primary), QColor(theme.border_subtle))
+        self.toggle.set_track_colors(QColor("#19945C"), QColor(theme.border_subtle))
         if self.delay_badge:
             self.delay_badge.setStyleSheet("""
                 QLabel {
@@ -663,8 +663,13 @@ class MainWindow(QMainWindow):
     def _update_countdown_label(self) -> None:
         current_profile = self.config_manager.get_current_profile()
         enabled_count = sum(1 for a in current_profile.apps if a.enabled)
+        theme = getattr(self, "current_theme", get_theme(self.config_manager.theme))
+        base_color = theme.accent_hover
+        light_red = "#f87171"
         self.countdown_status_label.setText(
-            f"Auto-launching in {self.remaining_seconds}s [Space to pause] ({enabled_count} apps enabled)"
+            f'<span style="color: {base_color};">Auto-launching in {self.remaining_seconds}s </span>'
+            f'<span style="color: {light_red};">[Space to pause]</span>'
+            f'<span style="color: {base_color};"> ({enabled_count} apps enabled)</span>'
         )
         self.progress_bar.setValue(self.remaining_seconds)
 
@@ -681,10 +686,16 @@ class MainWindow(QMainWindow):
 
     def _toggle_pause_countdown(self) -> None:
         self.is_paused = not self.is_paused
+        theme = getattr(self, "current_theme", get_theme(self.config_manager.theme))
+        base_color = theme.accent_hover
+        light_red = "#f87171"
         if self.is_paused:
             self.pause_resume_btn.setText("Resume")
             self.pause_resume_btn.setToolTip("Resume countdown (Space)")
-            self.countdown_status_label.setText(f"Paused at {self.remaining_seconds}s [Space to resume]")
+            self.countdown_status_label.setText(
+                f'<span style="color: {base_color};">Paused at {self.remaining_seconds}s </span>'
+                f'<span style="color: {light_red};">[Space to resume]</span>'
+            )
         else:
             self.pause_resume_btn.setText("Pause")
             self.pause_resume_btn.setToolTip("Pause countdown (Space)")
@@ -814,7 +825,9 @@ class MainWindow(QMainWindow):
                 border-radius: 10px;
             }}
         """)
-        self.countdown_status_label.setStyleSheet(f"color: {theme.accent_hover}; border: none; background: transparent;")
+        self.countdown_status_label.setStyleSheet("border: none; background: transparent;")
+        if self.countdown_card.isVisible():
+            self._update_countdown_label()
         self.pause_resume_btn.setStyleSheet(build_header_btn_stylesheet(theme))
         self.cancel_countdown_btn.setStyleSheet(build_header_btn_stylesheet(theme))
         self.progress_bar.setStyleSheet(f"""

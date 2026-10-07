@@ -120,6 +120,10 @@ class SettingsDialog(FramelessDialogBase):
             "so you can make changes at your own pace."
         ))
 
+        self.spacebar_hint_lbl = QLabel("Use the spacebar to pause")
+        self.spacebar_hint_lbl.setStyleSheet("color: #71717a; font-size: 11px; margin-left: 28px; margin-top: -4px;")
+        countdown_vbox.addWidget(self.spacebar_hint_lbl)
+
         duration_layout = QHBoxLayout()
         duration_layout.setContentsMargins(0, 0, 0, 0)
         duration_layout.setSpacing(8)
@@ -415,6 +419,9 @@ class SettingsDialog(FramelessDialogBase):
         ]:
             grp.setStyleSheet(grp_style)
 
+        if hasattr(self, "spacebar_hint_lbl") and self.spacebar_hint_lbl:
+            self.spacebar_hint_lbl.setStyleSheet(f"color: {theme.text_muted}; font-size: 11px; margin-left: 28px; margin-top: -4px;")
+
         if hasattr(self, "cancel_btn") and self.cancel_btn:
             self.cancel_btn.setStyleSheet(f"""
                 QPushButton {{
@@ -497,6 +504,8 @@ class SettingsDialog(FramelessDialogBase):
     def _on_countdown_toggled(self, checked: bool) -> None:
         self.countdown_spin.setEnabled(checked)
         self.countdown_autostart_only_check.setEnabled(checked)
+        if hasattr(self, "spacebar_hint_lbl") and self.spacebar_hint_lbl:
+            self.spacebar_hint_lbl.setEnabled(checked)
 
     def _install_desktop_entry(self) -> None:
         success = AutostartManager.install_desktop_entry()

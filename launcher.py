@@ -161,6 +161,10 @@ class AppLauncher:
                     "systemd-run",
                     "--user",
                     "--slice=app.slice",
+                    "-p",
+                    "KillMode=none",
+                    "-p",
+                    "RemainAfterExit=yes",
                     f"--description={desc}",
                     *cmd_to_run,
                 ]

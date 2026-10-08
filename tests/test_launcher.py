@@ -48,6 +48,16 @@ class TestAppLauncher(unittest.TestCase):
         classes = AppLauncher.get_target_window_classes(app)
         self.assertIn("zen-youtube", classes)
 
+    def test_launch_with_systemd_run(self):
+        app = AppEntry(
+            name="Test Echo",
+            command="true",
+            desktop_file="",
+            delay_seconds=0,
+        )
+        success = AppLauncher.launch(app)
+        self.assertTrue(success)
+
 
 if __name__ == "__main__":
     unittest.main()

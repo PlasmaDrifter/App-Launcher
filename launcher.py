@@ -146,10 +146,39 @@ class AppLauncher:
 
     @classmethod
     def launch(cls, app: AppEntry, global_launch_minimized: bool = False) -> bool:
-        """Launches a single app in a detached background session."""
+        """Launches a single app in an isolated background session."""
         try:
             args, use_shell = cls.get_launch_command(app)
-            # Create a completely detached process
+
+            # In systemd user sessions (such as autostart), wrap with systemd-run so
+            # the launched process breaks out into its own transient unit in app.slice
+            # instead of being trapped in AutoLaunch's service cgroup.
+            if cls._has_binary("systemd-run"):
+                desc = app.name or "AutoLaunch app"
+                # args is ["/bin/sh", "-c", full_shell_cmd]
+                cmd_to_run = args if isinstance(args, list) else [args]
+                run_args = [
+                    "systemd-run",
+                    "--user",
+                    "--slice=app.slice",
+                    f"--description={desc}",
+                    *cmd_to_run,
+                ]
+                try:
+                    res = subprocess.run(
+                        run_args,
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    if res.returncode == 0:
+                        if app.start_minimized or global_launch_minimized:
+                            cls.minimize_window_deferred(app)
+                        return True
+                except Exception:
+                    pass
+
+            # Fallback to detached subprocess.Popen
             subprocess.Popen(
                 args,
                 shell=use_shell,
